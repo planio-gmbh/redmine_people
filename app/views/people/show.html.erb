@@ -5,7 +5,7 @@
 <div class="contextual">
   <%= link_to l(:label_profile), user_path(@person), :class => 'icon icon-user' %>
   <%= link_to l(:button_edit), {:controller => 'people', :action => 'edit', :id => @person}, :class => 'icon icon-edit' if User.current.allowed_people_to?(:edit_people, @person) %>
-  <%= link_to l(:button_delete), {:controller => 'users', :action => 'destroy', :project_id => @project, :id => @person}, :confirm => l(:text_are_you_sure), :method => :delete, :class => 'icon icon-del' if User.current.allowed_people_to?(:delete_people, @person) %>
+  <%= change_status_link(@person) %>
 </div>
 
 <h2><%= l(:label_people_person) %> #<%= @person.id %></h2>

@@ -69,7 +69,7 @@
   <% end %>
 
 	<% unless @person.birthday.blank? %>
-	<tr> <th class = "birthday"><%= l(:label_people_birthday) %>:</th><td class="birthday bday" title=<%= "#{format_date(@person.birthday)}" %>><%= "#{@person.birthday.day} #{t('date.month_names')[@person.birthday.month]}"%></td> </tr>
+	<tr> <th class = "birthday"><%= l(:label_people_birthday) %>:</th><td class="birthday bday" title="<%= "#{format_date(@person.birthday)}" %>"><%= "#{@person.birthday.day} #{t('date.month_names')[@person.birthday.month]}"%></td> </tr>
 	<tr> <th class = "age"><%= l(:label_people_age) %>:</th><td class="ega"><%= @person.age %></td> </tr>
 	<% end %>
 

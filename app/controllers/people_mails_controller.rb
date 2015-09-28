@@ -3,7 +3,7 @@ class PeopleMailsController < ApplicationController
 
 
   def new
-    @people = People.visible.find_all_by_id(params[:ids]).reject{|c| c.email.blank?}
+    @people = People.visible.where(:id => params[:ids]).reject{|c| c.email.blank?}
     raise ActiveRecord::RecordNotFound if @people.empty?
     if !@people.collect{|c| c.send_mail_allowed?}.inject{|memo,d| memo && d}
       deny_access
@@ -12,7 +12,7 @@ class PeopleMailsController < ApplicationController
   end
 
   def create
-    people = Contact.visible.find_all_by_id(params[:ids])
+    people = Contact.visible.where(:id => params[:ids])
     raise ActiveRecord::RecordNotFound if people.empty?
     if !people.collect{|c| c.send_mail_allowed?}.inject{|memo,d| memo && d}
       deny_access 
@@ -50,7 +50,7 @@ class PeopleMailsController < ApplicationController
   end  
 
   def preview_email
-    @text = mail_macro(Contact.visible.first(:conditions => {:id  => params[:ids][0]}), params[:"message-content"])
+    @text = mail_macro(Contact.visible.where(:id  => params[:ids][0]).first, params[:"message-content"])
     render :partial => 'common/preview'
   end  
 end

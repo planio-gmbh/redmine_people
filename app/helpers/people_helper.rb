@@ -16,6 +16,19 @@ module PeopleHelper
     s.html_safe
   end
 
+  def change_status_link(person)
+    return unless User.current.allowed_people_to?(:edit_people, person) && person.id != User.current.id && !person.admin
+    url = {:controller => 'people', :action => 'update', :id => person, :page => params[:page], :status => params[:status], :tab => nil}
+
+    if person.locked?
+      link_to l(:button_unlock), url.merge(:person => {:status => User::STATUS_ACTIVE}), :method => :put, :class => 'icon icon-unlock'
+    elsif person.registered?
+      link_to l(:button_activate), url.merge(:person => {:status => User::STATUS_ACTIVE}), :method => :put, :class => 'icon icon-unlock'
+    elsif person != User.current
+      link_to l(:button_lock), url.merge(:person => {:status => User::STATUS_LOCKED}), :method => :put, :class => 'icon icon-lock'
+    end
+  end
+
   def person_to_vcard(person)
     card = Vcard::Vcard::Maker.make2 do |maker|
 

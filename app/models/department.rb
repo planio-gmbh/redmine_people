@@ -1,15 +1,28 @@
 class Department < ActiveRecord::Base
   include Redmine::SafeAttributes
   unloadable
-  belongs_to :head, :class_name => 'Person', :foreign_key => 'head_id'    
-  has_many :people, :uniq => true, :dependent => :nullify
+  belongs_to :head, :class_name => 'Person', :foreign_key => 'head_id'
 
-  acts_as_nested_set :order => 'name', :dependent => :destroy
+  has_many :people_information, :class_name => "PeopleInformation", :dependent => :nullify
+
+  if ActiveRecord::VERSION::MAJOR >= 4
+    has_many :people, lambda{ uniq }, :class_name => 'Person', :through => :people_information
+  else
+    has_many :people, :class_name => 'Person', :through => :people_information, :uniq => true
+  end
+
+  if Redmine::VERSION.to_s < '3.0'
+    acts_as_nested_set :order => 'name', :dependent => :destroy
+  else
+    include DepartmentNestedSet
+  end
+
   acts_as_attachable_global
 
   validates_presence_of :name 
   validates_uniqueness_of :name 
 
+  attr_accessible :name, :background, :parent_id, :head_id
   safe_attributes 'name',
     'background',
     'parent_id',
@@ -41,13 +54,8 @@ class Department < ActiveRecord::Base
 
   def allowed_parents
     return @allowed_parents if @allowed_parents
-    @allowed_parents = Department.all
-    @allowed_parents = @allowed_parents - self_and_descendants
+    @allowed_parents = Department.all - self_and_descendants - [self]
     @allowed_parents << nil
-    unless parent.nil? || @allowed_parents.empty? || @allowed_parents.include?(parent)
-      @allowed_parents << parent
-    end
-    @allowed_parents
-  end  
+  end
 
 end

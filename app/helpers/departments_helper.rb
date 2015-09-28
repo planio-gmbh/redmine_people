@@ -22,7 +22,7 @@ module DepartmentsHelper
     department_tree(departments) do |department, level|
       name_prefix = (level > 0 ? '&nbsp;' * 2 * level + '&#187; ' : '').html_safe
       tag_options = {:value => department.id}
-      if department == options[:selected] || (options[:selected].respond_to?(:include?) && options[:selected].include?(department))
+      if department == options[:selected] || department.id == options[:selected] || (options[:selected].respond_to?(:include?) && options[:selected].include?(department))
         tag_options[:selected] = 'selected'
       else
         tag_options[:selected] = nil

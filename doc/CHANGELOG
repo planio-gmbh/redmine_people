@@ -1,8 +1,20 @@
 == Redmine People plugin changelog
 
 Redmine People plugin - User management plugin for redmine
-Copyright (C) 2011-2014  Kirill Bezrukov
+Copyright (C) 2011-2015 Kirill Bezrukov
 http://www.redminecrm.com/
+
+== 2015-09-23 v1.0.0
+
+* Redmine 3.1 support
+* Lock/Unlock link instead delete
+* Spanish translation update (Leandro Russo)
+* Czech translation (Zdenek Mikovec)
+* Twitter avatars exlcuded
+* Portuguese translation update (Rui Rebelo)
+* Swedish translation update (Khedron Wilk)
+* Spanish Translation update (Luis Blasco)
+* Chinese Translation (zhoutt)
 
 == 2014-03-26 v0.1.8
 

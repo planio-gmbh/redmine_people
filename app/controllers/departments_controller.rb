@@ -69,8 +69,8 @@ class DepartmentsController < ApplicationController
   end  
 
   def add_people
-    @people = Person.find_all_by_id(params[:person_id] || params[:person_ids])
-    @department.people << @people if request.post?
+    @people = PeopleInformation.where(:user_id => params[:person_id] || params[:person_ids])
+    @department.people_information << @people if request.post?
     respond_to do |format|
       format.html { redirect_to :controller => 'departments', :action => 'edit', :id => @department, :tab => 'people' }
       format.js
@@ -79,7 +79,7 @@ class DepartmentsController < ApplicationController
   end
 
   def remove_person
-    @department.people.delete(Person.find(params[:person_id])) if request.delete?
+    @department.people_information.delete(PeopleInformation.find(params[:person_id])) if request.delete?
     respond_to do |format|
       format.html { redirect_to :controller => 'departments', :action => 'edit', :id => @department, :tab => 'people' }
       format.js
@@ -89,7 +89,7 @@ class DepartmentsController < ApplicationController
 
 
   def autocomplete_for_person
-    @people = Person.active.where(:type => 'User').not_in_department(@department).like(params[:q]).all(:limit => 100)
+    @people = Person.active.where(:type => 'User').not_in_department(@department).like(params[:q]).limit(100)
     render :layout => false
   end  
 

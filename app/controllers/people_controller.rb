@@ -16,8 +16,14 @@ class PeopleController < ApplicationController
   	@people = find_people
     @groups = Group.all.sort
     @departments = Department.order(:name)
-    @next_birthdays = Person.active.next_birthdays
-    @new_people = Person.active.where("appearance_date IS NOT NULL").order("appearance_date desc").first(5)
+
+    @next_birthdays = Person.active
+    @next_birthdays = @next_birthdays.visible if Redmine::VERSION.to_s >= "3.0"
+    @next_birthdays = @next_birthdays.next_birthdays
+
+    @new_people = Person.active
+    @new_people = @new_people.visible if Redmine::VERSION.to_s >= "3.0"
+    @new_people = @new_people.eager_load(:information).where("#{PeopleInformation.table_name}.appearance_date IS NOT NULL").order("#{PeopleInformation.table_name}.appearance_date desc").first(5)
 
     respond_to do |format|
       format.html {render :partial => 'list_excerpt', :layout => false if request.xhr?}
@@ -25,11 +31,15 @@ class PeopleController < ApplicationController
   end
 
   def show
+    unless @person.visible?
+      render_404
+      return
+    end
     # @person.roles = Role.new(:permissions => [:download_attachments])
     events = Redmine::Activity::Fetcher.new(User.current, :author => @person).events(nil, nil, :limit => 10)
     @events_by_day = events.group_by(&:event_date)
     @person_attachments = @person.attachments.select{|a| a != @person.avatar}
-    @memberships = @person.memberships.all(:conditions => Project.visible_condition(User.current))
+    @memberships = @person.memberships.where(Project.visible_condition(User.current))
     respond_to do |format|
       format.html
       format.vcf { send_data(person_to_vcard(@person), :filename => "#{@person.name}.vcf", :type => 'text/x-vcard;', :disposition => 'attachment') }
@@ -37,14 +47,18 @@ class PeopleController < ApplicationController
   end
 
   def edit
-    @auth_sources = AuthSource.find(:all)
+    @auth_sources = AuthSource.all
     @departments = Department.all.sort
     @membership ||= Member.new
+    @person.build_information unless @person.information
   end
 
   def new
-    @person = Person.new(:language => Setting.default_language, :mail_notification => Setting.default_notification_option, :department_id => params[:department_id])
-    @auth_sources = AuthSource.find(:all)
+    @person = Person.new(:language => Setting.default_language, :mail_notification => Setting.default_notification_option)
+    @person.build_information
+    @person.safe_attributes = { 'information_attributes' => { 'department_id' => params[:department_id] }}
+
+    @auth_sources = AuthSource.all
     @departments = Department.all.sort
   end
 
@@ -76,7 +90,7 @@ class PeopleController < ApplicationController
     @person.password, @person.password_confirmation = params[:person][:password], params[:person][:password_confirmation] unless @person.auth_source_id
     @person.type = 'User'
     if @person.save
-      @person.pref.attributes = params[:pref]
+      @person.pref.attributes = params[:pref] if params[:pref]
       @person.pref[:no_self_notified] = (params[:no_self_notified] == '1')
       @person.pref.save
       @person.notified_project_ids = (@person.mail_notification == 'selected' ? params[:notified_project_ids] : [])
@@ -94,7 +108,7 @@ class PeopleController < ApplicationController
         format.api  { render :action => 'show', :status => :created, :location => person_url(@person) }
       end
     else
-      @auth_sources = AuthSource.find(:all)
+      @auth_sources = AuthSource.all
       # Clear password input
       @person.password = @person.password_confirmation = nil
 
@@ -102,6 +116,13 @@ class PeopleController < ApplicationController
         format.html { render :action => 'new' }
         format.api  { render_validation_errors(@person) }
       end
+    end
+  end
+
+  def destroy
+    @person.destroy
+    respond_to do |format|
+      format.html { redirect_back_or_default(people_path) }
     end
   end
 
@@ -149,7 +170,7 @@ private
         User.current.allowed_people_to?(:add_people, @person)
       when "update", "edit"
         User.current.allowed_people_to?(:edit_people, @person)
-      when "delete"
+      when "destroy"
         User.current.allowed_people_to?(:delete_people, @person)
       when "index", "show"
         User.current.allowed_people_to?(:view_people, @person)
@@ -195,7 +216,8 @@ private
   def find_people(pages=true)
     # scope = scope.scoped(:conditions => ["#{Person.table_name}.status_id = ?", params[:status_id]]) if (!params[:status_id].blank? && params[:status_id] != "o" && params[:status_id] != "d")
     @status = params[:status] || 1
-    scope = Person.logged.status(@status)
+    scope = Person.eager_load(:information).logged.status(@status)
+    scope = scope.visible if Redmine::VERSION.to_s >= "3.0"
     scope = scope.seach_by_name(params[:name]) if params[:name].present?
     scope = scope.in_group(params[:group_id]) if params[:group_id].present?
     scope = scope.in_department(params[:department_id]) if params[:department_id].present?
@@ -206,10 +228,15 @@ private
     @department = Department.find(params[:department_id]) if params[:department_id].present?
     if pages
       @limit =  per_page_option
-      @people_pages = Paginator.new(self, @people_count,  @limit, params[:page])
-      @offset = @people_pages.current.offset
+      if Redmine::VERSION.to_s > '2.5'
+        @people_pages = Paginator.new(@people_count,  @limit, params[:page])
+        @offset = @people_pages.offset
+      else
+        @people_pages = Paginator.new(self, @people_count,  @limit, params[:page])
+        @offset = @people_pages.current.offset
+      end
 
-      scope = scope.scoped :limit  => @limit, :offset => @offset
+      scope = scope.limit(@limit).offset(@offset)
       @people = scope
 
       fake_name = @people.first.name if @people.length > 0 #without this patch paging does not work
@@ -219,7 +246,7 @@ private
   end
 
   def bulk_find_people
-    @people = Person.find_all_by_id(params[:id] || params[:ids])
+    @people = Person.where(:id => params[:id] || params[:ids])
     raise ActiveRecord::RecordNotFound if @people.empty?
     if @people.detect {|person| !person.visible?}
       deny_access

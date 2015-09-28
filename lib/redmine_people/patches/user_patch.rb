@@ -11,7 +11,11 @@ module RedminePeople
 
         base.class_eval do
           unloadable
-          has_one :avatar, :class_name => "Attachment", :as  => :container, :conditions => "#{Attachment.table_name}.description = 'avatar'", :dependent => :destroy
+          if ActiveRecord::VERSION::MAJOR >= 4
+            has_one :avatar, lambda { where("#{Attachment.table_name}.description = 'avatar'")}, :class_name => "Attachment", :as  => :container, :dependent => :destroy          
+          else
+            has_one :avatar, :class_name => "Attachment", :as  => :container, :conditions => "#{Attachment.table_name}.description = 'avatar'", :dependent => :destroy
+          end
           acts_as_attachable_global
         end
       end

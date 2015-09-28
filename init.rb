@@ -4,11 +4,11 @@ Redmine::Plugin.register :redmine_people do
   name 'Redmine People plugin'
   author 'RedmineCRM'
   description 'This is a plugin for managing Redmine users'
-  version '0.1.8'
+  version '1.0.0'
   url 'http://redminecrm.com/projects/people'
   author_url 'mailto:support@redminecrm.com'
 
-  requires_redmine :version_or_higher => '2.1.0'
+  requires_redmine :version_or_higher => '2.3'
 
   settings :default => {
     :users_acl => {},

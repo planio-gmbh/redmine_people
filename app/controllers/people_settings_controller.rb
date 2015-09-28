@@ -32,7 +32,7 @@ class PeopleSettingsController < ApplicationController
   end
 
   def autocomplete_for_user
-    @principals = Principal.where(:status => [Principal::STATUS_ACTIVE, Principal::STATUS_ANONYMOUS]).like(params[:q]).all(:limit => 100, :order => 'type, login, lastname ASC')
+    @principals = Principal.where(:status => [Principal::STATUS_ACTIVE, Principal::STATUS_ANONYMOUS]).like(params[:q]).order('type, login, lastname ASC').limit(100)
     render :layout => false
   end
 

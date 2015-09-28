@@ -28,7 +28,7 @@
 <div class="splitcontentright">
 
 
-<% principals = Principal.active.all(:limit => 100, :order => 'type, login, lastname ASC') %>
+<% principals = Principal.active.order('type, login, lastname ASC').limit(100) %>
 <% if principals.any? %>
   <%= form_tag({:controller => :people_settings, :action => :create}, :remote => true,
                :method => :post, :id => "people_acl_form", :class => "select-users") do |f| %>

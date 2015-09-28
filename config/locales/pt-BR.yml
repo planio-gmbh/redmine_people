@@ -53,9 +53,15 @@ pt-BR:
   label_department: Departamento
   label_department_head: Chefe
   label_people_department: Departamento
-  label_people_at_department: no
+  label_people_at_department: em
   field_department_parent: Sub-departamento de
   people_permission_edit_departments: Editar departamento
 
   #0.1.5
   people_permission_delete_departments: Deletar departamento
+
+  #0.1.6
+  label_people_new_mail: Nova mensagem
+
+  #0.1.7
+  label_people_show_for_registered_users: Mostrar contactos para utilizadores registados

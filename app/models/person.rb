@@ -1,54 +1,45 @@
 class Person < User
   unloadable
-  self.inheritance_column = :_type_disabled
-
-  belongs_to :department
-
   include Redmine::SafeAttributes
 
+  self.inheritance_column = :_type_disabled
+  
+  has_one :information, :class_name => "PeopleInformation", :foreign_key => :user_id, :dependent => :destroy
+
+  delegate :phone, :address, :skype, :birthday, :job_title, :company, :middlename, :gender, :twitter,
+          :facebook, :linkedin, :department_id, :background, :appearance_date,
+          :to => :information, :allow_nil => true
+
+  accepts_nested_attributes_for :information, :allow_destroy => true, :update_only => true, :reject_if => proc {|attributes| PeopleInformation.reject_information(attributes)}
+  
+  has_one :department, :through => :information
+  
   GENDERS = [[l(:label_people_male), 0], [l(:label_people_female), 1]]
 
   scope :in_department, lambda {|department|
     department_id = department.is_a?(Department) ? department.id : department.to_i
-    { :conditions => {:department_id => department_id, :type => "User"} }
+    eager_load(:information).where("(#{PeopleInformation.table_name}.department_id = ?) AND (#{Person.table_name}.type = 'User')", department_id)
   }
   scope :not_in_department, lambda {|department|
     department_id = department.is_a?(Department) ? department.id : department.to_i
-    { :conditions => ["(#{User.table_name}.department_id != ?) OR (#{User.table_name}.department_id IS NULL)", department_id] }
-  }  
+    eager_load(:information).where("(#{PeopleInformation.table_name}.department_id != ?) OR (#{PeopleInformation.table_name}.department_id IS NULL)", department_id)
+  }
 
-  scope :seach_by_name, lambda {|search| {:conditions =>   ["(LOWER(#{Person.table_name}.firstname) LIKE ? OR 
-                                                                    LOWER(#{Person.table_name}.lastname) LIKE ? OR 
-                                                                    LOWER(#{Person.table_name}.middlename) LIKE ? OR 
-                                                                    LOWER(#{Person.table_name}.login) LIKE ? OR 
-                                                                    LOWER(#{Person.table_name}.mail) LIKE ?)", 
-                                                                  search.downcase + "%",
-                                                                  search.downcase + "%",
-                                                                  search.downcase + "%",
-                                                                  search.downcase + "%",
-                                                                  search.downcase + "%"] }}
+  scope :seach_by_name, lambda {|search| eager_load(ActiveRecord::VERSION::MAJOR >= 4 ? [:information, :email_address] : [:information]).where("(LOWER(#{Person.table_name}.firstname) LIKE :search OR
+                                                                    LOWER(#{Person.table_name}.lastname) LIKE :search OR
+                                                                    LOWER(#{PeopleInformation.table_name}.middlename) LIKE :search OR
+                                                                    LOWER(#{Person.table_name}.login) LIKE :search OR
+                                                                    LOWER(#{(ActiveRecord::VERSION::MAJOR >= 4) ? (EmailAddress.table_name + '.address') : (Person.table_name + '.mail')}) LIKE :search)", {:search => search.downcase + "%"} )}
 
-  validates_uniqueness_of :firstname, :scope => [:lastname, :middlename]
+  validates_uniqueness_of :firstname, :scope => :lastname
+  
+  safe_attributes 'custom_field_values',
+                  'custom_fields',
+                  'information_attributes',
+  :if => lambda {|person, user| (person.new_record? && user.allowed_people_to?(:add_people, person)) || user.allowed_people_to?(:edit_people, person) }
 
-  safe_attributes 'phone', 
-                  'address',
-                  'skype',
-                  'birthday',
-                  'job_title',
-                  'company',
-                  'middlename',
-                  'gender',
-                  'twitter',
-                  'facebook',
-                  'linkedin',
-                  'department_id',
-                  'background',
-                  'appearance_date'
-
-
-  def phones                            
-    @phones || self.phone ? self.phone.split( /, */) : []
-  end  
+  safe_attributes 'status',
+    :if => lambda {|person, user| user.allowed_people_to?(:edit_people, person) && person.id != user.id && !person.admin }
 
   def type
     'User'
@@ -62,6 +53,10 @@ class Person < User
     nil
   end
 
+  def phones
+    @phones || self.phone ? self.phone.split( /, */) : []
+  end
+
   def next_birthday
     return if birthday.blank?
     year = Date.today.year
@@ -72,7 +67,7 @@ class Person < User
   end
 
   def self.next_birthdays(limit = 10)
-    Person.where("users.birthday IS NOT NULL").sort_by(&:next_birthday).first(limit)
+    Person.eager_load(:information).where("#{PeopleInformation.table_name}.birthday IS NOT NULL").sort_by(&:next_birthday).first(limit)
   end
 
   def age
@@ -82,17 +77,21 @@ class Person < User
   end
 
   def editable_by?(usr, prj=nil)
-    true    
-    # usr && (usr.allowed_to?(:edit_people, prj) || (self.author == usr && usr.allowed_to?(:edit_own_invoices, prj))) 
+    true
+    # usr && (usr.allowed_to?(:edit_people, prj) || (self.author == usr && usr.allowed_to?(:edit_own_invoices, prj)))
     # usr && usr.logged? && (usr.allowed_to?(:edit_notes, project) || (self.author == usr && usr.allowed_to?(:edit_own_notes, project)))
   end
 
-  def visible?(usr=nil)
+  def visible?(user=User.current)
+    if Redmine::VERSION.to_s >= "3.0"
+      principal = Principal.visible(user).where(:id => id).first
+      return principal.present?
+    end
     true
   end
 
   def attachments_visible?(user=User.current)
     true
   end
-      
+
 end

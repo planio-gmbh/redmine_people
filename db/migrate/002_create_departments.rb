@@ -1,4 +1,5 @@
 class CreateDepartments < ActiveRecord::Migration
+
   def change
     create_table :departments do |t|
       t.integer   :parent_id, :default => nil
@@ -7,7 +8,7 @@ class CreateDepartments < ActiveRecord::Migration
       t.string    :name
       t.text      :background
       t.integer   :head_id
-      t.timestamps
+      t.timestamps :null => false
     end
     add_index :departments, [:parent_id, :lft, :rgt]
     add_index :departments, :head_id

@@ -26,7 +26,7 @@
 </div>
 
 <div class="splitcontentright">
-<% people = Person.active.where(:type => 'User').not_in_department(@department).all(:limit => 100) %>
+<% people = Person.active.where(:type => 'User').not_in_department(@department).limit(100) %>
 <% if people.any? %>
   <%= form_for(@department, :remote => true, :url => {:action => "add_people", :id => @department},
                :html => {:method => :post, :class => "select-users"}) do |f| %>

@@ -9,8 +9,8 @@ module RedminePeople
         base.class_eval do
           unloadable
 
-          alias_method_chain :link_to_user, :people  
-          alias_method_chain :avatar, :people   
+          alias_method_chain :link_to_user, :people
+          alias_method_chain :avatar, :people
         end
       end
 
@@ -19,8 +19,8 @@ module RedminePeople
         # include ContactsHelper
 
         def avatar_with_people(user, options = { })
-          options[:width] = options[:size] || "50" unless options[:width]  
-          options[:height] = options[:size] || "50" unless options[:height]  
+          options[:width] = options[:size] || "50" unless options[:width]
+          options[:height] = options[:size] || "50" unless options[:height]
           if user.blank? || user.is_a?(String) || (user.is_a?(User) && user.anonymous?)
             return avatar_without_people(user, options)
           end
@@ -29,11 +29,11 @@ module RedminePeople
             image_tag(avatar_url, options.merge({:class => "gravatar"}))
           elsif user.respond_to?(:facebook) &&  !user.facebook.blank?
             image_tag("https://graph.facebook.com/#{user.facebook.gsub('.*facebook.com\/','')}/picture?type=square#{'&return_ssl_resources=1' if (request && request.ssl?)}", options.merge({:class => "gravatar"}))
-          elsif user.respond_to?(:twitter) &&  !user.twitter.blank?
-            image_tag("https://api.twitter.com/1/users/profile_image?screen_name=#{user.twitter}&size=bigger", options.merge({:class => "gravatar"}))
+          elsif user.respond_to?(:twitter) && !user.twitter.blank?
+            image_tag("https://twitter.com/#{user.twitter}/profile_image?size=original", options.merge({:class => "gravatar"}))
           elsif !Setting.gravatar_enabled?
             image_tag('person.png', options.merge({:plugin => "redmine_people", :class => "gravatar"}))
-          else  
+          else
             avatar_without_people(user, options)
           end
 
@@ -51,9 +51,9 @@ module RedminePeople
             h(user.to_s)
           end
         end
-        
+
       end
-      
+
     end
   end
 end
