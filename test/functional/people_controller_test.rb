@@ -1,3 +1,24 @@
+# encoding: utf-8
+#
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2015 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_people is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_people is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
+
 require File.expand_path('../../test_helper', __FILE__)
 
 class PeopleControllerTest < ActionController::TestCase
@@ -6,7 +27,7 @@ class PeopleControllerTest < ActionController::TestCase
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:departments, :people_information])
+                            [:departments, :people_information, :custom_fields, :custom_values])
 
   def setup
     @person = Person.find(4)
@@ -50,19 +71,6 @@ class PeopleControllerTest < ActionController::TestCase
     get :index
     assert_response :success
     assert_template :index
-  end
-
-  def test_get_index_with_name
-    @request.session[:user_id] = 1
-    get :index, :name => 'Admin', :xhr => true
-    assert_select 'h1 a', {:count => 0, :text => /Hill Robert/}
-    assert_select 'h1 a', 'Redmine Admin'
-  end
-
-  def test_get_index_with_department
-    @request.session[:user_id] = 1
-    get :index, :department_id => 2
-    assert_select 'h1 a', {:count => 0, :text => /Hill Robert/}
     assert_select 'h1 a', 'Redmine Admin'
   end
 
@@ -99,11 +107,13 @@ class PeopleControllerTest < ActionController::TestCase
                     :information_attributes => {
                       :facebook => 'Facebook',
                       :middlename => 'Ivanovich'
-                    }
+                    },
+                    :tag_list => 'Tag1, Tag2'
                    }
     person = Person.last
     assert_redirected_to :action => 'show', :id => person.id
     assert_equal ['ivan@ivanov.com','Ivanovich'], [person.email, person.middlename]
+    assert_equal ['Tag1', 'Tag2'], person.tag_list.sort
   end
 
   def test_put_update

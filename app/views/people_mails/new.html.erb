@@ -1,17 +1,17 @@
 <h2><%= l(:label_people_new_mail) %></h2>
 
 
-<div class="box" id="duplicates">                                  
-  <ul>   
-      <% @people.each do |person| %>   
-    <li>   
-      <%= avatar_to person, :size => "16" %> 
-      <%= link_to_source person %> 
+<div class="box" id="duplicates">
+  <ul>
+      <% @people.each do |person| %>
+    <li>
+      <%= avatar person, :size => "16" %>
+      <%= link_to person.name, person_path(person) %>
       <%= "(#{person.job_title}) " unless person.job_title.blank? %>
-      - <%= person.emails.first %> 
-        </li>         
-    <% end %>    
-  </ul>  
+      - <%= person.emails.first %>
+        </li>
+    <% end %>
+  </ul>
 </div>
 
 
@@ -46,8 +46,8 @@
   <em class="info"><%= l(:text_email_macros, :macro => "%%NAME%%, %%LAST_NAME%%, %%MIDDLE_NAME%%, %%FULL_NAME%%, %%COMPANY%%, %%DATE%%, %%[Custom field]%%") %></em>
   </p>
   <%= wikitoolbar_for 'message-content' %>
-  
-  <p id="attachments_form"><%= label_tag('attachments[1][file]', l(:label_attachment_plural))%><%= render :partial => 'attachments/form' %></p> 
+
+  <p id="attachments_form"><%= label_tag('attachments[1][file]', l(:label_attachment_plural))%><%= render :partial => 'attachments/form' %></p>
 </div>
 
 <p>
@@ -60,5 +60,5 @@
 <div id="preview" class="wiki"></div>
 
 <% content_for :header_tags do %>
-  <%= javascript_include_tag :people, :plugin => 'redmine_people'  %>
+  <%= javascript_include_tag :redmine_people, :plugin => 'redmine_people'  %>
 <% end %>

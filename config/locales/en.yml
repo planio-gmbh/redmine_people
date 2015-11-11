@@ -64,3 +64,23 @@ en:
 
   #0.1.7
   label_people_show_for_registered_users: Show people for registered users
+
+
+  #1.1.0
+  label_people_tags_plural: Tags
+  label_visibility_public: to any users
+  label_visibility_private: to me only
+  label_people_default_list_style: Default list style
+  label_people_list_partial_style: List style
+  label_people_list_excerpt: Excerpt list
+  label_people_list_list: Table
+
+  label_people_company: Company
+
+  button_people_edit_query: Edit query
+  button_people_delete_query: Delete query
+  people_permission_manage_public_people_queries: Manage public queries
+  label_people_add_tag: + add tag
+  field_person_full_name: Full name
+  label_people_edit_tags: Edit tags
+  people_permission_manage_tags: Manage tags

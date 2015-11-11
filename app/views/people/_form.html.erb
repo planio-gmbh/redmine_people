@@ -35,11 +35,26 @@
 				<em><%= l(:text_comma_separated) %></em>
 			 </p>
 		</div>
-    
+
     <p><%= information.text_field :skype, :label => l(:label_people_skype) -%></p>
     <p><%= information.text_field :facebook, :label => l(:label_people_facebook) + ' ID'-%></p>
     <p><%= information.text_field :twitter, :label => l(:label_people_twitter) -%></p>
     <p><%= information.text_field :linkedin, :label => l(:label_people_linkedin) + ' ID' -%></p>
+
+		<% custom_field_values = @person.custom_field_values %>
+		<div class="splitcontent">
+		  <div class="splitcontentleft">
+		  <% i = 0 %>
+		  <% split_on = (custom_field_values.size / 2.0).ceil - 1 %>
+		  <% custom_field_values.each do |value| %>
+		    <p><%= custom_field_tag_with_label :person, value, :required => value.custom_field.is_required? %></p>
+		  <% if i == split_on -%>
+		  </div><div class="splitcontentright">
+		  <% end -%>
+		  <% i += 1 -%>
+		  <% end -%>
+		  </div>
+		</div>
 
 		<p class  = "notes"><%= information.text_area :background , :cols => 80, :rows => 8, :class => 'wiki-edit', :label => l(:label_people_background)  %></p>
 		<%= wikitoolbar_for 'person_information_attributes_background' %>

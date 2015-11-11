@@ -1,3 +1,22 @@
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2015 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_people is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_people is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
+
 require_dependency 'application_helper'
 
 module RedminePeople
@@ -21,14 +40,13 @@ module RedminePeople
         def avatar_with_people(user, options = { })
           options[:width] = options[:size] || "50" unless options[:width]
           options[:height] = options[:size] || "50" unless options[:height]
+          options[:size] = "#{options[:width]}x#{options[:height]}" if ActiveRecord::VERSION::MAJOR >= 4
           if user.blank? || user.is_a?(String) || (user.is_a?(User) && user.anonymous?)
             return avatar_without_people(user, options)
           end
           if user.is_a?(User) && (avatar = user.avatar)
             avatar_url = url_for :only_path => false, :controller => "people", :action => "avatar", :id => avatar, :size => options[:size]
             image_tag(avatar_url, options.merge({:class => "gravatar"}))
-          elsif user.respond_to?(:facebook) &&  !user.facebook.blank?
-            image_tag("https://graph.facebook.com/#{user.facebook.gsub('.*facebook.com\/','')}/picture?type=square#{'&return_ssl_resources=1' if (request && request.ssl?)}", options.merge({:class => "gravatar"}))
           elsif user.respond_to?(:twitter) && !user.twitter.blank?
             image_tag("https://twitter.com/#{user.twitter}/profile_image?size=original", options.merge({:class => "gravatar"}))
           elsif !Setting.gravatar_enabled?

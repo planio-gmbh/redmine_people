@@ -9,7 +9,7 @@
     <tbody>
     <% @users_acl.each do |acl| %>
       <tr id="user-<%= acl.principal_id %>" class="<%= cycle 'odd', 'even' %>">
-        <td class="user <%= 'group' if acl.principal.is_a?(Group) %>"><%= link_to_user acl.principal %></td>
+        <td class="user name <%= 'group' if acl.principal.is_a?(Group) %>"><%= link_to_user acl.principal %></td>
         <td class="acls">
           <%= acl.permissions.map{|a| l_or_humanize(a, :prefix => 'people_permission_') }.join(', ') %>
         </td>

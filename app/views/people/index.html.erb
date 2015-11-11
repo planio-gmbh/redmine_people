@@ -1,21 +1,27 @@
 <div class="contextual">
-  <%= link_to l(:label_user_new), {:controller => 'people', :action => 'new', :project_id => @project, :department_id => @department}, :class => 'icon icon-add' if User.current.allowed_people_to?(:add_people, @person) %>
+    <%= link_to l(:label_user_new), {:controller => 'people', :action => 'new', :department_id => @department}, :class => 'icon icon-add' if User.current.allowed_people_to?(:add_people, @person) %>
+    <%= call_hook(:view_people_action_menu) %>
 </div>
 
+<% html_title(@query.new_record? ? l(:label_people) : @query.name) %>
 
+<div class="filters">
+	<%= form_tag({:contoller => "people", :action => "index"}, :method => :get,  :id => "query_form") do %>
+    <%= hidden_field_tag 'set_filter', '1' %>
 
-<div class="filters">   
-	<%= form_tag({:contoller => "people", :action => "index"}, :method => :get,  :id => "query_form") do %> 
-		<%= hidden_field_tag('project_id', @project.to_param) if @project %>   
-		<% no_filters = true %>	
-    
     <script type="text/javascript">
        jQuery(function($) {
           // when the #search field changes
-          $("#name").observe_field(2, function() {
+          $("#search").observe_field(2, function() {
             var form = $("#query_form"); // grab the form wrapping the search bar.
             var url = form.attr("action");
+            form.find('[name="c[]"] option').each(function(i, elem){
+              $(elem).attr('selected', true)
+            });
             var formData = form.serialize();
+            form.find('[name="c[]"] option').each(function(i, elem){
+              $(elem).attr('selected', false)
+            });
             $.get(url, formData, function(data) { // perform an AJAX get, the trailing function is what happens on successful get.
                 $("#people_list").html(data); // replace the "results" div with the result of action taken
             });
@@ -23,78 +29,41 @@
         });
     </script>
 
-    <h2 class="contacts_header">
-        <span id='scope_header' class="scope_title"> 
-        <%= @group ? @group.name : (@department ? @department.name : l(:label_people))  %>
+    <h2 class="people_header">
+        <span id='scope_header' class="scope_title">
+        <%= @query.new_record? ? l(:label_people) : @query.name %>
         </span>
 
-        <span class="live_search">  
-            <%= text_field_tag(:name, params[:name], :autocomplete => "off", :class => "live_search_field", :placeholder => l(:label_people_search) ) %>    
-
+        <span class="live_search">
+            <%= text_field_tag(:search, params[:search], :autocomplete => "off", :class => "live_search_field", :placeholder => l(:label_people_search) ) %>
         </span>
-
-    </h2>		
-	
-<!-- 	<fieldset id="filters" class="collapsible <%= 'collapsed' if no_filters %>">
-		<legend onclick="toggleFieldset(this);"><%= l(:label_filter_plural) %></legend>
-		<div style="<%= 'display: none;' if no_filters %>">  
-			<p>  
-
-			</p>    
-
-		</div>
-	</fieldset> 
-
-	<p class="buttons hide-when-print">
-		<%= link_to l(:button_apply), "#", :onclick=>"$('#query_form').submit()", :class => 'icon icon-checked' %>
-    	<%= link_to l(:button_clear), { :set_filter => 1, :project_id => @project }, :class => 'icon icon-reload'  %>
-	</p>   
- -->                                                                   
-	<% end %>  
-
+    </h2>
+	<% end %>
 </div>
 
-<div id="people_list">  
-<% if @people.empty? %>
+<div id="people_list">
+<% if @people.blank? %>
     <p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
-  	<%= render :partial => 'list_excerpt' %>
+    <%= render :partial => people_list_style %>
+    <p class="pagination"><%= pagination_links_full @people_pages, @people_count %></p>
 <% end %>
-</div>  
+</div>
 
-<!-- <PRO> -->
-<% other_formats_links do |f| %>
-    <%= f.link_to 'CSV', :url => params %>    
-<% end if false%>
-<!-- </PRO> -->
-                     
-<% html_title l(:label_people) %>                                                                     
+<% html_title l(:label_people) %>
 
-<%= context_menu url_for( {:controller => "people", :action => "context_menu"} )%>  
+<%= context_menu url_for( {:controller => "people", :action => "context_menu"} )%>
 
 <% content_for :sidebar do %>
-	<div id="people_groups">
-		<h3><%= l(:label_people_group_plular) %></h3>
-		<ul>
-			<li>
-				<%= link_to l(:label_people_all), {} %>
-			</li>
-		<% @groups.each do |group| %>
-			<li>
-				<%= link_to group.name, {:group_id => group.id}, :class => "#{'selected' if @group && group == @group}"  %>
-			</li>	
-		<% end %>
-		</ul>
-	</div>
 
   <% unless @departments.blank? %>
   <div id="people_departments">
     <div class="contextual">
       <%= link_to l(:button_edit), departments_path if User.current.allowed_people_to?(:edit_departments) %>
-    </div>    
+    </div>
     <h3><%= l(:label_department_plural) %></h3>
     <%= department_tree_links(@departments) %>
-  </div>  
+  </div>
   <% end %>
 
   <div id="next_birthdays">
@@ -110,8 +79,8 @@
 <% end %>
 
 <% content_for :header_tags do %>
-    <%= javascript_include_tag :people, :plugin => 'redmine_people'  %>
-	<%= stylesheet_link_tag :people, :plugin => 'redmine_people' %> 
+    <%= javascript_include_tag :redmine_people, :plugin => 'redmine_people'  %>
+	<%= stylesheet_link_tag :redmine_people, :plugin => 'redmine_people' %>
 	<meta name = "format-detection" content = "telephone=no">
 <% end %>
 

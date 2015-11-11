@@ -17,30 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
-# Plugin's routes
-# See: http://guides.rubyonrails.org/routing.html
+class ActsAsTaggableMigration < ActiveRecord::Migration
+  def self.up
+    ActiveRecord::Base.create_taggable_table
+  end
 
-resources :people do
-    collection do
-      get :bulk_edit, :context_menu, :edit_mails, :preview_email, :avatar
-      post :bulk_edit, :bulk_update, :send_mails
-      delete :bulk_destroy
-    end
-end
-
-resources :departments do
-  member do
-    get :autocomplete_for_person
-    post :add_people
-    delete :remove_person
+  def self.down
+    ActiveRecord::Base.drop_taggable_table
   end
 end
-
-resources :people_settings do
-  collection do
-    get :autocomplete_for_user
-  end
-end
-
-resources :people_queries
-

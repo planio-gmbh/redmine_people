@@ -58,3 +58,20 @@ ru:
 
   #0.1.5
   people_permission_delete_departments: Удаление отделов
+
+  #1.1.0
+  label_people_tags_plural: Тэги
+  label_visibility_public: всем пользователям
+  label_visibility_private: только мне
+  label_people_default_list_style: Вид списка по умолчанию
+  label_people_list_partial_style: Отображать как
+  label_people_list_excerpt: Списком
+  label_people_list_list: Таблицей
+  label_people_company: Компания
+  button_people_edit_query: Редактировать запрос
+  button_people_delete_query: Удалить запрос
+  people_permission_manage_public_people_queries: Управление общими запросами
+  label_people_add_tag: + добавить тэг
+  field_person_full_name: Полное имя
+  label_people_edit_tags: Редактировать тэги
+  people_permission_manage_tags: Редактировать тэги

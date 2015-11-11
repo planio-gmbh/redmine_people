@@ -1,33 +1,93 @@
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2015 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_people is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_people is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
+
 class PeopleController < ApplicationController
   unloadable
 
   Mime::Type.register "text/x-vcard", :vcf
 
   before_filter :find_person, :only => [:show, :edit, :update, :destroy, :edit_membership, :destroy_membership]
-  before_filter :authorize_people, :except => [:avatar, :context_menu]
+  before_filter :authorize_people, :except => [:avatar, :context_menu, :autocomplete_tags]
   before_filter :bulk_find_people, :only => [:context_menu]
 
   include PeopleHelper
+  helper :queries
   helper :departments
   helper :context_menus
   helper :custom_fields
+  helper :sort
+  include SortHelper
 
   def index
-  	@people = find_people
-    @groups = Group.all.sort
-    @departments = Department.order(:name)
+    retrieve_people_query
+    sort_init(@query.sort_criteria.empty? ? [['lastname', 'asc'], ['firstname', 'asc']] : @query.sort_criteria)
+    sort_update(@query.sortable_columns)
+    @query.sort_criteria = sort_criteria.to_a
 
-    @next_birthdays = Person.active
-    @next_birthdays = @next_birthdays.visible if Redmine::VERSION.to_s >= "3.0"
-    @next_birthdays = @next_birthdays.next_birthdays
+    if @query.valid?
+      case params[:format]
+      when 'csv', 'pdf', 'xls', 'vcf'
+        @limit = Setting.issues_export_limit.to_i
+      when 'atom'
+        @limit = Setting.feeds_limit.to_i
+      when 'xml', 'json'
+        @offset, @limit = api_offset_and_limit
+      else
+        @limit = per_page_option
+      end
 
-    @new_people = Person.active
-    @new_people = @new_people.visible if Redmine::VERSION.to_s >= "3.0"
-    @new_people = @new_people.eager_load(:information).where("#{PeopleInformation.table_name}.appearance_date IS NOT NULL").order("#{PeopleInformation.table_name}.appearance_date desc").first(5)
+      @people_count = @query.object_count
 
-    respond_to do |format|
-      format.html {render :partial => 'list_excerpt', :layout => false if request.xhr?}
+      if Redmine::VERSION.to_s > '2.5'
+        @people_pages = Paginator.new(@people_count,  @limit, params[:page])
+        @offset = @people_pages.offset
+      else
+        @people_pages = Paginator.new(self, @people_count,  @limit, params[:page])
+        @offset = @people_pages.current.offset
+      end
+
+      @people_count_by_group = @query.object_count_by_group
+      @people = @query.results_scope(
+        :include => [:avatar],
+        :search => params[:search],
+        :order => sort_clause,
+        :limit  =>  @limit,
+        :offset =>  @offset
+      )
+
+      @groups = Group.all.sort
+      @departments = Department.order(:name)
+
+      @next_birthdays = Person.active
+      @next_birthdays = @next_birthdays.visible if Redmine::VERSION.to_s >= "3.0"
+      @next_birthdays = @next_birthdays.next_birthdays
+
+      @new_people = Person.active
+      @new_people = @new_people.visible if Redmine::VERSION.to_s >= "3.0"
+      @new_people = @new_people.eager_load(:information).where("#{PeopleInformation.table_name}.appearance_date IS NOT NULL").order("#{PeopleInformation.table_name}.appearance_date desc").first(5)
+
+      respond_to do |format|
+        format.html {render :partial => people_list_style, :layout => false if request.xhr?}
+      end
+
     end
+
   end
 
   def show
@@ -42,7 +102,6 @@ class PeopleController < ApplicationController
     @memberships = @person.memberships.where(Project.visible_condition(User.current))
     respond_to do |format|
       format.html
-      format.vcf { send_data(person_to_vcard(@person), :filename => "#{@person.name}.vcf", :type => 'text/x-vcard;', :disposition => 'attachment') }
     end
   end
 
@@ -213,42 +272,10 @@ private
     render_404
   end
 
-  def find_people(pages=true)
-    # scope = scope.scoped(:conditions => ["#{Person.table_name}.status_id = ?", params[:status_id]]) if (!params[:status_id].blank? && params[:status_id] != "o" && params[:status_id] != "d")
-    @status = params[:status] || 1
-    scope = Person.eager_load(:information).logged.status(@status)
-    scope = scope.visible if Redmine::VERSION.to_s >= "3.0"
-    scope = scope.seach_by_name(params[:name]) if params[:name].present?
-    scope = scope.in_group(params[:group_id]) if params[:group_id].present?
-    scope = scope.in_department(params[:department_id]) if params[:department_id].present?
-    scope = scope.where(:type => 'User')
-
-    @people_count = scope.count
-    @group = Group.find(params[:group_id]) if params[:group_id].present?
-    @department = Department.find(params[:department_id]) if params[:department_id].present?
-    if pages
-      @limit =  per_page_option
-      if Redmine::VERSION.to_s > '2.5'
-        @people_pages = Paginator.new(@people_count,  @limit, params[:page])
-        @offset = @people_pages.offset
-      else
-        @people_pages = Paginator.new(self, @people_count,  @limit, params[:page])
-        @offset = @people_pages.current.offset
-      end
-
-      scope = scope.limit(@limit).offset(@offset)
-      @people = scope
-
-      fake_name = @people.first.name if @people.length > 0 #without this patch paging does not work
-    end
-
-    scope
-  end
-
   def bulk_find_people
     @people = Person.where(:id => params[:id] || params[:ids])
     raise ActiveRecord::RecordNotFound if @people.empty?
-    if @people.detect {|person| !person.visible?}
+    if @people.detect {|person| !person.visible? }
       deny_access
       return
     end

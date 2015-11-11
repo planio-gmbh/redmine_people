@@ -1,19 +1,42 @@
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2015 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_people is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_people is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
+
 class Person < User
   unloadable
   include Redmine::SafeAttributes
 
   self.inheritance_column = :_type_disabled
-  
+
   has_one :information, :class_name => "PeopleInformation", :foreign_key => :user_id, :dependent => :destroy
 
   delegate :phone, :address, :skype, :birthday, :job_title, :company, :middlename, :gender, :twitter,
           :facebook, :linkedin, :department_id, :background, :appearance_date,
           :to => :information, :allow_nil => true
 
+  acts_as_customizable
+
   accepts_nested_attributes_for :information, :allow_destroy => true, :update_only => true, :reject_if => proc {|attributes| PeopleInformation.reject_information(attributes)}
-  
+
   has_one :department, :through => :information
-  
+
+  rcrm_acts_as_taggable
+
   GENDERS = [[l(:label_people_male), 0], [l(:label_people_female), 1]]
 
   scope :in_department, lambda {|department|
@@ -32,7 +55,7 @@ class Person < User
                                                                     LOWER(#{(ActiveRecord::VERSION::MAJOR >= 4) ? (EmailAddress.table_name + '.address') : (Person.table_name + '.mail')}) LIKE :search)", {:search => search.downcase + "%"} )}
 
   validates_uniqueness_of :firstname, :scope => :lastname
-  
+
   safe_attributes 'custom_field_values',
                   'custom_fields',
                   'information_attributes',
@@ -40,6 +63,9 @@ class Person < User
 
   safe_attributes 'status',
     :if => lambda {|person, user| user.allowed_people_to?(:edit_people, person) && person.id != user.id && !person.admin }
+
+  safe_attributes 'tag_list',
+    :if => lambda {|person, user| user.allowed_people_to?(:manage_tags, person) }
 
   def type
     'User'
@@ -92,6 +118,10 @@ class Person < User
 
   def attachments_visible?(user=User.current)
     true
+  end
+
+  def available_custom_fields
+    CustomField.where("type = 'UserCustomField'").sorted.to_a
   end
 
 end

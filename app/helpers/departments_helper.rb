@@ -1,3 +1,24 @@
+# encoding: utf-8
+#
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2015 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_people is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_people is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
+
 module DepartmentsHelper
   def department_tree(departments, &block)
     Department.department_tree(departments, &block)
@@ -12,10 +33,10 @@ module DepartmentsHelper
     end
     departments = department ? department.allowed_parents.compact : Department.all
     options = ''
-    options << "<option value=''></option>" 
+    options << "<option value=''></option>"
     options << department_tree_options_for_select(departments, :selected => selected)
     content_tag('select', options.html_safe, :name => 'department[parent_id]', :id => 'department_parent_id')
-  end  
+  end
 
   def department_tree_options_for_select(departments, options = {})
     s = ''
@@ -32,19 +53,30 @@ module DepartmentsHelper
       s << content_tag(tag, name_prefix + h(department), tag_options)
     end
     s.html_safe
-  end  
+  end
 
   def department_tree_links(departments, options = {})
     s = ''
     s << "<ul class='department-tree'>"
-    s << "<li> #{link_to l(:label_people_all), {}} </li>"
-    department_tree(departments) do |department, level| 
+    s << "<li> #{link_to(l(:label_people_all), :set_filter => 1)} </li>"
+    department_tree(departments) do |department, level|
       name_prefix = (level > 0 ? ('&nbsp;' * 2 * level + '&#187; ') : '')
-      s << "<li>" + name_prefix + link_to(department.name, {:department_id => department.id}, :class => "#{'selected' if @department && department == @department}")
-      s << "</li>"                          
-    end 
+      s << "<li>" + name_prefix + people_department_link(department , :class => "#{'selected' if @department && department == @department}")
+      s << "</li>"
+    end
     s << "</ul>"
-    s.html_safe   
+    s.html_safe
+  end
+
+  def people_department_link(department, options={})
+    p = {:controller => 'people',
+     :action => 'index',
+     :set_filter => 1,
+     :fields => [:department_id],
+     :values => {:department_id => [department.id]},
+     :operators => {:department_id => '='}
+    }.merge(options)
+    link_to department.name, p, options
   end
 
 end
