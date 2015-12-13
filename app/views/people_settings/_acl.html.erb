@@ -11,9 +11,36 @@
       <tr id="user-<%= acl.principal_id %>" class="<%= cycle 'odd', 'even' %>">
         <td class="user name <%= 'group' if acl.principal.is_a?(Group) %>"><%= link_to_user acl.principal %></td>
         <td class="acls">
-          <%= acl.permissions.map{|a| l_or_humanize(a, :prefix => 'people_permission_') }.join(', ') %>
+          <span id="principal-<%= acl.principal_id %>-permissions"><%= acl.permissions.map{|a| l_or_humanize(a, :prefix => 'people_permission_') }.join(', ') %></span>
+
+
+          <%= form_tag({:controller => :people_settings, :action => :create}, :remote => true,
+                      :method => :post, :id => "principal-#{acl.principal_id}-permissions-form", :class => 'hol'
+               ) do |f| %>
+          <p>
+            <% RedminePeople.available_permissions.each do |permission| %>
+            <label>
+              <%= check_box_tag('acls[]',
+                                permission, acl.permissions.include?(permission),
+                                :id => nil ) %> <%= l_or_humanize(permission, :prefix => 'people_permission_') %>
+            </label><br />
+            <% end %>
+          </p>
+          <%= hidden_field_tag 'user_ids[]', acl.principal_id, :id => nil %>
+          <p>
+            <%= submit_tag l(:button_save), :class => "small" %>
+            <%= link_to_function(l(:button_cancel),
+                                 "$('#principal-#{acl.principal_id}-permissions').show(); $('#principal-#{acl.principal_id}-permissions-form').hide(); return false;") %>
+          </p>
+        <% end %>
+
+
         </td>
         <td class="buttons">
+          <%= link_to_function l(:button_edit),
+                           "$('#principal-#{acl.principal_id}-permissions').hide(); $('#principal-#{acl.principal_id}-permissions-form').show(); return false;",
+                           :class => 'icon icon-edit' %>
+
           <%= delete_link url_for(:controller => "people_settings", :action => "destroy",  :id => acl.principal_id ), :remote => true %>
         </td>
       </tr>
@@ -27,9 +54,7 @@
 
 <div class="splitcontentright">
 
-
-<% principals = Principal.active.order('type, login, lastname ASC').limit(100) %>
-<% if principals.any? %>
+<% if @principals.any? %>
   <%= form_tag({:controller => :people_settings, :action => :create}, :remote => true,
                :method => :post, :id => "people_acl_form", :class => "select-users") do |f| %>
     <fieldset><legend><%=l(:label_user_new)%></legend>
@@ -38,7 +63,7 @@
     <%= javascript_tag "observeSearchfield('user_search', 'principals', '#{ escape_javascript url_for(:controller => :people_settings, :action => :autocomplete_for_user) }')" %>
 
     <div id="principals">
-      <%= people_principals_check_box_tags 'user_ids[]', principals %>
+      <%= people_principals_check_box_tags 'user_ids[]', @principals %>
     </div>
     <p><%= l(:label_permissions) %>:
     <% RedminePeople.available_permissions.each do |role| %>

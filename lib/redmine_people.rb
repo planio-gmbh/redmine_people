@@ -26,8 +26,10 @@ Rails.configuration.to_prepare do
   require_dependency 'redmine_people/patches/user_patch'
   require_dependency 'redmine_people/patches/application_helper_patch'
   require_dependency 'redmine_people/patches/users_controller_patch'
+  require_dependency 'redmine_people/patches/my_controller_patch'
 
   require_dependency 'redmine_people/hooks/views_layouts_hook'
+  require_dependency 'redmine_people/hooks/views_my_account_hook'
 end
 
 module RedminePeople

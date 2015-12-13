@@ -38,8 +38,8 @@ class DepartmentTest < ActiveSupport::TestCase
     #
     @first = Department.find(1)
     @second = Department.find(2)
+    @third = Department.find(3)
 
-    @third = Department.create!(:name => 'third', :parent_id => @first.id)
     @fourth = Department.create!(:name => 'fourth', :parent_id => @first.id)
     @fifth = Department.create!(:name => 'fifth', :parent_id => @fourth.id)
 
@@ -49,8 +49,9 @@ class DepartmentTest < ActiveSupport::TestCase
   end
 
   def test_people
-    assert_equal [4], Department.find(1).people.map(&:id)
+    assert (not Department.find(1).people.any? )
     assert_equal [1, 2, 3], Department.find(2).people.map(&:id).sort
+    assert_equal [4], Department.find(3).people.map(&:id)
   end
 
   def test_department_tree
@@ -65,7 +66,7 @@ class DepartmentTest < ActiveSupport::TestCase
       end
     end
     assert_equal ['FBI department 1', 'FBI department 2'].sort , departments0.sort
-    assert_equal ['third', 'fourth'].sort , departments1.sort
+    assert_equal ['FBI department 1.1', 'fourth'].sort , departments1.sort
   end
 
   def test_nested_set_structure
@@ -76,9 +77,9 @@ class DepartmentTest < ActiveSupport::TestCase
 
   def test_allowed_parents
     assert_equal ["FBI department 2"], @first.allowed_parents.compact.map(&:name).sort
-    assert_equal ["FBI department 1", "fifth", "fourth", "third"], @second.allowed_parents.compact.map(&:name).sort
-    assert_equal ["FBI department 1", "FBI department 2", "third"], @fourth.allowed_parents.compact.map(&:name).sort
-    assert_equal ["FBI department 1", "FBI department 2", "fourth", "third"], @fifth.allowed_parents.compact.map(&:name).sort
+    assert_equal ["FBI department 1", "FBI department 1.1", "fifth", "fourth"], @second.allowed_parents.compact.map(&:name).sort
+    assert_equal ["FBI department 1", "FBI department 1.1", "FBI department 2"], @fourth.allowed_parents.compact.map(&:name).sort
+    assert_equal ["FBI department 1", "FBI department 1.1", "FBI department 2", "fourth"], @fifth.allowed_parents.compact.map(&:name).sort
   end
 
 end

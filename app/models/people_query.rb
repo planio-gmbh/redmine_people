@@ -18,7 +18,6 @@
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
 class PeopleQuery < Query
-
   self.queried_class = Principal
 
   VISIBILITY_PRIVATE = 0
@@ -43,7 +42,9 @@ class PeopleQuery < Query
     QueryColumn.new(:job_title, :sortable => "#{PeopleInformation.table_name}.job_title", :groupable => "#{PeopleInformation.table_name}.job_title", :caption => :label_people_job_title),
     QueryColumn.new(:background, :sortable => "#{PeopleInformation.table_name}.background", :caption => :label_people_background),
     QueryColumn.new(:appearance_date, :sortable => "#{PeopleInformation.table_name}.appearance_date", :caption => :label_people_appearance_date),
+    QueryColumn.new(:last_login_on, :sortable => "#{Person.table_name}.last_login_on", :caption => :field_last_login_on),
     QueryColumn.new(:department_id, :sortable => "#{Department.table_name}.name", :groupable => "#{PeopleInformation.table_name}.department_id", :caption => :label_people_department),
+    QueryColumn.new(:is_system, :sortable => "#{PeopleInformation.table_name}.is_system", :caption => :label_people_is_system),
     QueryColumn.new(:status, :sortable => "#{Person.table_name}.status", :caption => :field_status),
     QueryColumn.new(:tags, :caption => :label_people_tags_plural)
   ]
@@ -118,12 +119,14 @@ class PeopleQuery < Query
   end
 
   def initialize_available_filters
-    departments = Department.all.collect{ |t| [t.name, t.id.to_s] }
-    add_available_filter("department_id", :type => :list_optional,
-      :values => departments,
-      :order => 16,
-      :name => l(:label_people_department)
-    )
+    departments = []
+    Department.department_tree(Department.order(:lft)) do |department, level|
+      name_prefix = (level > 0 ? '-' * 2 * level + ' ' : '') #'&nbsp;'
+      departments << [(name_prefix + department.name).html_safe, department.id.to_s]
+    end
+    add_available_filter("department_id", :type => :list_optional, :name => l(:label_people_department), :order => 17,
+      :values => departments
+    ) if departments.any?
   end
 
   def default_columns_names
@@ -146,8 +149,13 @@ class PeopleQuery < Query
     includes =  (options[:include] || [] ) + [:department]
     includes << :email_address if Redmine::VERSION.to_s >= '3.0'
 
-    scope = scope.eager_load(:information).includes( includes.uniq).
-      where(statement).
+    scope = scope.eager_load(:information).includes( includes.uniq)
+
+    unless self.filters['is_system']
+      scope = scope.where("#{PeopleInformation.table_name}.is_system IS NULL OR #{PeopleInformation.table_name}.is_system = ?", ActiveRecord::Base.connection.quoted_false.gsub(/'/, ''))
+    end
+
+    scope = scope.where(statement).
       where(options[:conditions])
 
     scope
@@ -193,7 +201,9 @@ class PeopleQuery < Query
   end
 
   def sql_for_department_id_field(field, operator, value)
-    sql_for_field(field, operator, value, PeopleInformation.table_name, 'department_id')
+    department_ids = value
+    department_ids += Department.where(:id => value).map(&:descendants).flatten.collect{|c| c.id.to_s}.uniq
+    sql_for_field(field, operator, department_ids, PeopleInformation.table_name, 'department_id')
   end
 
 end

@@ -75,3 +75,6 @@ ru:
   field_person_full_name: Полное имя
   label_people_edit_tags: Редактировать тэги
   people_permission_manage_tags: Редактировать тэги
+  label_people_hide_age: Скрывать возраст
+  label_people_is_system: Системный
+  label_people_edit_own_data: Редактировать собственные данные

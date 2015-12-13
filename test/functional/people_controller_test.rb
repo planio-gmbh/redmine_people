@@ -31,6 +31,8 @@ class PeopleControllerTest < ActionController::TestCase
 
   def setup
     @person = Person.find(4)
+    # Remove accesses operations
+    Setting.plugin_redmine_people = {}
   end
 
   def access_message(action)
@@ -138,6 +140,18 @@ class PeopleControllerTest < ActionController::TestCase
     assert_raises(ActiveRecord::RecordNotFound) do
       Person.find(4)
     end
+  end
+
+  def test_load_tab
+    @request.session[:user_id] = @person.id
+    xhr :get, :load_tab, :tab_name => 'activity', :partial => 'activity', :id => @person.id
+    assert_response :success
+
+    xhr :get, :load_tab, :tab_name => 'files', :partial => 'attachments', :id => @person.id
+    assert_response :success
+
+    xhr :get, :load_tab, :tab_name => 'projects', :partial => 'projects', :id => @person.id
+    assert_response :success
   end
 
 end

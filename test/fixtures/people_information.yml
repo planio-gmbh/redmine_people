@@ -65,8 +65,11 @@ people_information_004:
   twitter: vaxa
   facebook: vaxa
   linkedin: vaxa
-  department_id: 1
+  department_id: 3
 #  custom_field_values:
 #  custom_fields: 
   background:
   appearance_date: 2014-07-19
+people_information_007:
+  user_id: 7
+  is_system: true

@@ -86,6 +86,22 @@ table.person_data td.name h4 {
 }
 
 
+div.person .system {
+  text-transform: uppercase;
+  background: #d22;
+  color: #fff;
+  font-weight: bold;
+  padding: 0px 2px 0px 2px;
+  font-size: 70%;
+  margin-right: 2px;
+  border-radius: 2px;
+  float: right;
+}
+
+table.person.attributes th {
+  text-align: left;
+}
+
 /**************************************************************/
 /*                   ACL                                      */
 /**************************************************************/
@@ -331,4 +347,17 @@ span.tag-label, span.tag-input {
 
 .people-tags-edit  ul.tagit li.tagit-new {
   padding: 0px;
+}
+
+
+/**************************************************************/
+/*                  PEOPLE ATTRIBUTES SIDEBAR                 */
+/**************************************************************/
+
+.tab-placeholder {
+    display: none;
+}
+
+.tab-placeholder.active {
+    display: block !important;
 }

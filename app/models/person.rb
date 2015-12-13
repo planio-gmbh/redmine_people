@@ -26,7 +26,7 @@ class Person < User
   has_one :information, :class_name => "PeopleInformation", :foreign_key => :user_id, :dependent => :destroy
 
   delegate :phone, :address, :skype, :birthday, :job_title, :company, :middlename, :gender, :twitter,
-          :facebook, :linkedin, :department_id, :background, :appearance_date,
+          :facebook, :linkedin, :department_id, :background, :appearance_date, :is_system,
           :to => :information, :allow_nil => true
 
   acts_as_customizable

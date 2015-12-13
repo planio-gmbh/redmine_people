@@ -1,4 +1,8 @@
 <div class = "box tabular" id="person_data">
+		<p id="issue_is_private_wrap">
+			<%= hidden_field_tag 'person[information_attributes][is_system]', 0, :id => nil %>
+			<%= check_box_tag 'person[information_attributes][is_system]', 1, @person.is_system %><label class="inline" for="person_information_attributes_is_system" id="person_is_system_label"><%= l(:label_people_is_system) %></label>
+		</p>
 	<p class="avatar" id="watchers">
 		<%= avatar(@person, :size => "64", :height => 64, :width => 64, :style => "vertical-align: middle;") %>
 		<%= link_to image_tag('delete.png'), {:controller => 'attachments', :action => 'destroy', :id => @person.avatar},

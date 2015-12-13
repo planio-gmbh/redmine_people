@@ -10,17 +10,18 @@
 
 <h2><%= l(:label_people_person) %> #<%= @person.id %></h2>
 <div class="person details">
+  <%= content_tag('span', l(:label_people_is_system), :class => 'system')  if  @person.is_system %>
   <table class="subject_header">
     <tr>
       <td class="avatar"><%= link_to avatar(@person, :size => "64", :full_size => true), @person.avatar %></td>
       <td class="name" style="vertical-align: top;">
         <h1><%= h @person.name %></h1>
         <p>
-        <%= h @person.job_title %>
-        <% if @person.department %>
-          <%= " #{l(:label_people_at_department)} " %>
-          <%= link_to @person.department.name, {:controller => 'departments', :action => 'show', :id => @person.department_id } %>
-        <% end %>
+          <%= h @person.job_title %>
+          <% if @person.department %>
+            <%= " #{l(:label_people_at_department)} " %>
+            <%= department_tree_tag @person %>
+          <% end %>
         </p>
       </td>
       <td class="subject_info">
@@ -37,14 +38,7 @@
   <%= call_hook(:view_people_show_details_bottom, :person => @person) %>
 </div>
 
-
-
-<% person_tabs = [{:name => 'activity', :partial => 'activity', :label => :label_activity},
-        {:name => 'files', :partial => 'attachments', :label => :label_attachment_plural},
-        {:name => 'projects', :partial => 'projects', :label => :label_project_plural}
-        ]   %>
-
-<%= render_tabs person_tabs %>
+<%= render_people_tabs people_tabs%>
 
 
 <% content_for :sidebar do %>

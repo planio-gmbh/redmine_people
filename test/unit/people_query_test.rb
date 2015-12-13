@@ -76,4 +76,26 @@ class PeopleQueryTest < ActiveSupport::TestCase
 
     assert @queries[1].editable_by?(@person_2)
   end
+
+  def test_object_scope_with_department
+    # With parent department
+    hash = {
+      :f =>['department_id'],
+      :op => {'department_id' => "="},
+      :v => {'department_id' => ['1']}}
+
+    @query = @query.build_from_params(hash)
+    assert_equal [4], @query.objects_scope.map(&:id)
+
+    # With sub department
+    hash = {
+      :f =>['department_id'],
+      :op => {'department_id' => "="},
+      :v => {'department_id' => ['3']}}
+
+    @query = @query.build_from_params(hash)
+    assert_equal [4], @query.objects_scope.map(&:id)
+
+  end
+
 end

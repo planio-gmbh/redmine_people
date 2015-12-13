@@ -22,10 +22,11 @@
 module PeopleHelper
 
   def birthday_date(person)
+    ages = Setting.plugin_redmine_people["hide_age"].to_i > 0 ? '' : "(#{person.age + 1})"
     if person.birthday.day == Date.today.day && person.birthday.month == Date.today.month
-       "#{l(:label_today).capitalize} (#{person.age + 1})"
+       "#{l(:label_today).capitalize} #{ages}"
     else
-      "#{person.birthday.day} #{t('date.month_names')[person.birthday.month]} (#{person.age + 1})"
+      "#{person.birthday.day} #{t('date.month_names')[person.birthday.month]} #{ages}"
     end
   end
 
@@ -99,6 +100,21 @@ module PeopleHelper
       person_name.html_safe
     else
       content_tag(:span, "#{person_avatar} #{person_name}".html_safe, :class => "person")
+    end
+  end
+
+  def people_tabs
+    [{:name => 'activity', :partial => 'activity', :label => l(:label_activity)},
+     {:name => 'files', :partial => 'attachments', :label => l(:label_attachment_plural)},
+     {:name => 'projects', :partial => 'projects', :label => l(:label_project_plural)}
+    ]
+  end
+
+  def render_people_tabs(tabs)
+    if tabs.any?
+      render :partial => 'common/people_tabs', :locals => {:tabs => tabs}
+    else
+      content_tag 'p', l(:label_no_data), :class => "nodata"
     end
   end
 

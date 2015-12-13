@@ -37,6 +37,9 @@ class PeopleSettingsControllerTest < ActionController::TestCase
   def setup
     @request.session[:user_id] = 1
     @user = User.find(4)
+
+    # Remove accesses operations
+    Setting.plugin_redmine_people = {}
   end
 
   def test_get_index
@@ -56,6 +59,10 @@ class PeopleSettingsControllerTest < ActionController::TestCase
 
     post :destroy, :id => 4
     assert_equal false, @user.allowed_people_to?(:add_people, @user)
+
+    get :index
+    assert_select '#principals label', { :count => 1, :text => /#{@user.name}/ }
+    assert_select 'table .user.name a', { :count => 0, :text => /#{@user.name}/ }
   end
 
   def test_post_create
@@ -65,6 +72,10 @@ class PeopleSettingsControllerTest < ActionController::TestCase
     @request.session[:user_id] = 1
     post :create, :user_ids => ['4'], :acls => ['add_people']
     assert @user.allowed_people_to?(:add_people, @user)
+
+    get :index
+    assert_select '#principals label', { :count => 0, :text => /#{@user.name}/ }
+    assert_select 'table .user.name a', { :count => 1, :text => /#{@user.name}/ }
   end
 
 end

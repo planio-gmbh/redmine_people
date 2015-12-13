@@ -23,6 +23,13 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../../test/test_helper')
 
 class RedminePeople::TestCase
+  module TestHelper
+    def with_people_settings(options, &block)
+      Setting.plugin_redmine_people.stubs(:[]).returns(nil)
+      options.each { |k, v| Setting.plugin_redmine_people.stubs(:[]).with(k).returns(v) }
+      yield
+    end
+  end
 
   def self.create_fixtures(fixtures_directory, table_names, class_names = {})
     if ActiveRecord::VERSION::MAJOR >= 4

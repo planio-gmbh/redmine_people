@@ -22,9 +22,11 @@ class PeopleController < ApplicationController
 
   Mime::Type.register "text/x-vcard", :vcf
 
-  before_filter :find_person, :only => [:show, :edit, :update, :destroy, :edit_membership, :destroy_membership]
+  before_filter :find_person, :only => [:show, :edit, :update, :destroy, :edit_membership, :destroy_membership, :load_tab]
   before_filter :authorize_people, :except => [:avatar, :context_menu, :autocomplete_tags]
   before_filter :bulk_find_people, :only => [:context_menu]
+  before_filter :visible?, :only => [:show, :load_tab]
+  before_filter :load_person_attachments, :load_person_memberships, :load_person_events, :only => [:show, :load_tab]
 
   include PeopleHelper
   helper :queries
@@ -91,15 +93,6 @@ class PeopleController < ApplicationController
   end
 
   def show
-    unless @person.visible?
-      render_404
-      return
-    end
-    # @person.roles = Role.new(:permissions => [:download_attachments])
-    events = Redmine::Activity::Fetcher.new(User.current, :author => @person).events(nil, nil, :limit => 10)
-    @events_by_day = events.group_by(&:event_date)
-    @person_attachments = @person.attachments.select{|a| a != @person.avatar}
-    @memberships = @person.memberships.where(Project.visible_condition(User.current))
     respond_to do |format|
       format.html
     end
@@ -222,6 +215,10 @@ class PeopleController < ApplicationController
     render :layout => false
   end
 
+  def load_tab
+
+  end
+
 private
   def authorize_people
     allowed = case params[:action].to_s
@@ -231,7 +228,7 @@ private
         User.current.allowed_people_to?(:edit_people, @person)
       when "destroy"
         User.current.allowed_people_to?(:delete_people, @person)
-      when "index", "show"
+      when "index", "show", "load_tab"
         User.current.allowed_people_to?(:view_people, @person)
       else
         false
@@ -241,6 +238,7 @@ private
       true
     else
       deny_access
+      return false
     end
   end
 
@@ -277,11 +275,30 @@ private
     raise ActiveRecord::RecordNotFound if @people.empty?
     if @people.detect {|person| !person.visible? }
       deny_access
-      return
+      return false
     end
   rescue ActiveRecord::RecordNotFound
     render_404
   end
 
+  def visible?
+    unless @person.visible?
+      render_404
+      return false
+    end
+  end
+
+  def load_person_attachments
+    @person_attachments = @person.attachments.select{|a| a != @person.avatar}
+  end
+
+  def load_person_memberships
+    @memberships = @person.memberships.where(Project.visible_condition(User.current))
+  end
+
+  def load_person_events
+    events = Redmine::Activity::Fetcher.new(User.current, :author => @person).events(nil, nil, :limit => 10)
+    @events_by_day = events.group_by(&:event_date)
+  end
 
 end

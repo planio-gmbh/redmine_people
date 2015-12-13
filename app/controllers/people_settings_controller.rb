@@ -23,7 +23,7 @@ class PeopleSettingsController < ApplicationController
 
   layout 'admin'
   before_filter :require_admin
-  before_filter :find_acl, :only => [:index]
+  before_filter :find_acl, :find_principals, :only => [:index]
 
   helper :departments
   helper :people
@@ -44,6 +44,7 @@ class PeopleSettingsController < ApplicationController
   def destroy
     PeopleAcl.delete(params[:id])
     find_acl
+    find_principals
     respond_to do |format|
       format.html { redirect_to :controller => 'people_settings', :action => 'index'}
       format.js
@@ -51,7 +52,7 @@ class PeopleSettingsController < ApplicationController
   end
 
   def autocomplete_for_user
-    @principals = Principal.where(:status => [Principal::STATUS_ACTIVE, Principal::STATUS_ANONYMOUS]).like(params[:q]).order('type, login, lastname ASC').limit(100)
+    find_principals
     render :layout => false
   end
 
@@ -62,6 +63,7 @@ class PeopleSettingsController < ApplicationController
       PeopleAcl.create(user_id, acls)
     end
     find_acl
+    find_principals
     respond_to do |format|
       format.html { redirect_to :controller => 'people_settings', :action => 'index', :tab => 'acl'}
       format.js
@@ -71,7 +73,14 @@ class PeopleSettingsController < ApplicationController
 private
 
   def find_acl
-    @users_acl = PeopleAcl.all
+    @users_acl ||= PeopleAcl.all
+  end
+
+  def find_principals
+    @principals = Principal.where(:status => [Principal::STATUS_ACTIVE, Principal::STATUS_ANONYMOUS]).order('type, login, lastname ASC')
+    @principals = @principals.like(params[:q]) if params[:q]
+    @principals = @principals.where("id NOT IN(?)", find_acl.map(&:principal_id) ) if find_acl.any?
+    @principals.limit(100)
   end
 
 end

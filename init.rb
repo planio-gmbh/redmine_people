@@ -21,7 +21,7 @@ requires_redmine_crm :version_or_higher => '0.0.19' rescue raise "\n\033[31mRedm
 
 require 'redmine_people'
 
-PEOPLE_VERSION_NUMBER = '1.1.0'
+PEOPLE_VERSION_NUMBER = '1.1.1'
 PEOPLE_VERSION_TYPE = "Light version"
 
 Redmine::Plugin.register :redmine_people do
@@ -36,7 +36,9 @@ Redmine::Plugin.register :redmine_people do
 
   settings :default => {
     :users_acl => {},
-    :visibility => ''
+    :visibility => '',
+    :hide_age => '0',
+    :edit_own_data => '1',
   }
 
   menu :top_menu, :people, {:controller => 'people', :action => 'index', :project_id => nil}, :caption => :label_people, :if => Proc.new {

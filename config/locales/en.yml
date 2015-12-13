@@ -84,3 +84,6 @@ en:
   field_person_full_name: Full name
   label_people_edit_tags: Edit tags
   people_permission_manage_tags: Manage tags
+  label_people_hide_age: Hide age
+  label_people_is_system: System
+  label_people_edit_own_data: Edit own data

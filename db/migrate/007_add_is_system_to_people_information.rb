@@ -17,34 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
-# Plugin's routes
-# See: http://guides.rubyonrails.org/routing.html
+class AddIsSystemToPeopleInformation < ActiveRecord::Migration
 
-resources :people do
-    collection do
-      get :bulk_edit, :context_menu, :edit_mails, :preview_email, :avatar
-      post :bulk_edit, :bulk_update, :send_mails
-      delete :bulk_destroy
-    end
-    member do
-      get 'tabs/:tab' => 'people#show', :as => "tabs"
-      get 'load_tab' => 'people#load_tab', :as => "load_tab"
-    end
-end
-
-resources :departments do
-  member do
-    get :autocomplete_for_person
-    post :add_people
-    delete :remove_person
+  def self.up
+    add_column :people_information, :is_system, :boolean, :default => false
   end
-end
 
-resources :people_settings do
-  collection do
-    get :autocomplete_for_user
+  def self.down
+    remove_column :people_information, :is_system
   end
+
 end
-
-resources :people_queries
-

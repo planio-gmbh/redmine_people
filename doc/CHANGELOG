@@ -4,6 +4,14 @@ Redmine People plugin - User management plugin for redmine
 Copyright (C) 2011-2015 Kirill Bezrukov
 http://www.redminecrm.com/
 
+== 2015-12-11 v1.1.1
+
+* Edit own data restriction setting
+* System users (not shown in list by default)
+* Async tabs load on person page
+* Hide age setting
+* Editable ACL settings
+
 == 2015-11-06 v1.1.0
 
 * People queries

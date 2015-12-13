@@ -28,36 +28,51 @@ class PersonTest < ActiveSupport::TestCase
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
                             [:people_information, :departments])
-  
-  def test_save
-    # without access
+
+
+  def setup
+    # Remove accesses operations
+    Setting.plugin_redmine_people = {}
+
     User.current = nil
-    params =  { 'firstname' => 'newName', 'mail' => 'new@mail.ru', 'information_attributes' => { 'phone' => '89555555555'}}
-    person = Person.find(4)
-    person.safe_attributes = params
-    person.save!
-    person.reload
-    assert_not_equal '89555555555', person.phone
+    @params =  { 'firstname' => 'newName', 'mail' => 'new@mail.ru', 'information_attributes' => { 'phone' => '89555555555'}}
+    @person = Person.find(4)
+  end
 
-    # with access
+  def test_save_without_access
+    # Editing by an anonymous user
+    @person.safe_attributes = @params
+    @person.save!
+    @person.reload
+    assert_not_equal '89555555555', @person.phone
+
+    # User changes himself but edit_own_data is disabled
+    Setting.plugin_redmine_people['edit_own_data'] = '0'
+
     User.current = User.find(4)
-    person.safe_attributes = params
-    person.save!
-    assert_equal 'newName', person.reload.firstname
-    assert_equal 'new@mail.ru', person.email
-    assert_equal '89555555555', person.phone
+    @person.safe_attributes = @params
+    @person.save!
+    assert_not_equal '89555555555', @person.phone
+  end
 
-    # Checks a reject_Information
-    User.current = User.find(5)
-    person = Person.find(5)
+  def test_save_with_edit_own_data_access
+    User.current = User.find(4)
+    Setting.plugin_redmine_people['edit_own_data'] = '1'
 
-    person.safe_attributes = { 'firstname' => 'newName' }
-    person.save
-    assert_nil person.reload.information
+    @person.safe_attributes = @params
+    @person.save!
+    assert_equal 'newName', @person.reload.firstname
+    assert_equal 'new@mail.ru', @person.email
+    assert_equal '89555555555', @person.phone
+  end
 
-    person.safe_attributes = { 'information_attributes' => { 'phone' => '111'}}
-    person.save
-    assert_not_nil person.reload.information
+  def test_save_with_edit_people_access
+    User.current = User.find(2)
+    PeopleAcl.create(2, ['edit_people'])
+
+    @person.safe_attributes = @params
+    @person.save!
+    assert_equal '89555555555', @person.phone
   end
 
   def test_destroy
@@ -75,13 +90,14 @@ class PersonTest < ActiveSupport::TestCase
   end
 
   def test_in_department_scope
-    assert_equal [4], Person.in_department(1).map(&:id)
+    assert (not Person.in_department(1).any? )
     assert_equal [1,2,3], Person.in_department(2).map(&:id).sort
+    assert_equal [4], Person.in_department(3).map(&:id)
   end
 
   def test_not_in_department_scope
-    assert_equal false, Person.not_in_department(1).map(&:id).include?(4)
-    assert_equal false, Person.not_in_department(2).map(&:id).include?(1)
+    assert Person.not_in_department(1).map(&:id).include?(4)
+    assert (not Person.not_in_department(2).map(&:id).include?(1))
   end
     
   def test_visible?

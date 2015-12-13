@@ -25,7 +25,7 @@ class PeopleInformation < ActiveRecord::Base
   belongs_to :department
 
   attr_accessible :phone, :address, :skype, :birthday, :job_title, :company, :middlename, :gender, :twitter,
-                  :facebook, :linkedin, :department_id, :background, :appearance_date
+                  :facebook, :linkedin, :department_id, :background, :appearance_date, :is_system
 
   def self.reject_information(attributes)
     exists = attributes['id'].present?

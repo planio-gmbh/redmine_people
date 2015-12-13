@@ -17,34 +17,27 @@
 # You should have received a copy of the GNU General Public License
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
-# Plugin's routes
-# See: http://guides.rubyonrails.org/routing.html
+module RedminePeople
+  module Patches
+    module MyControllerPatch
+      def self.included(base)
+        base.send(:include, InstanceMethods)
 
-resources :people do
-    collection do
-      get :bulk_edit, :context_menu, :edit_mails, :preview_email, :avatar
-      post :bulk_edit, :bulk_update, :send_mails
-      delete :bulk_destroy
-    end
-    member do
-      get 'tabs/:tab' => 'people#show', :as => "tabs"
-      get 'load_tab' => 'people#load_tab', :as => "load_tab"
-    end
-end
+        base.class_eval do
+          before_filter :authorize_people, :only => [:destroy]
+        end
+      end
 
-resources :departments do
-  member do
-    get :autocomplete_for_person
-    post :add_people
-    delete :remove_person
+      module InstanceMethods
+        def authorize_people
+          deny_access unless User.current.allowed_people_to?(:edit_people, User.current)
+        end
+
+      end
+    end
   end
 end
 
-resources :people_settings do
-  collection do
-    get :autocomplete_for_user
-  end
+unless MyController.included_modules.include?(RedminePeople::Patches::MyControllerPatch)
+  MyController.send(:include, RedminePeople::Patches::MyControllerPatch)
 end
-
-resources :people_queries
-

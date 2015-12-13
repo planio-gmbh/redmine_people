@@ -66,7 +66,9 @@
 
 	<% unless @person.birthday.blank? %>
 	<tr> <th class = "birthday"><%= l(:label_people_birthday) %>:</th><td class="birthday bday" title="<%= "#{format_date(@person.birthday)}" %>"><%= "#{@person.birthday.day} #{t('date.month_names')[@person.birthday.month]}"%></td> </tr>
-	<tr> <th class = "age"><%= l(:label_people_age) %>:</th><td class="ega"><%= @person.age %></td> </tr>
+	<% unless Setting.plugin_redmine_people["hide_age"].to_i > 0 %>
+		<tr> <th class = "age"><%= l(:label_people_age) %>:</th><td class="ega"><%= @person.age %></td> </tr>
+	<% end %>
 	<% end %>
 
 	<% @person.custom_values.each do |custom_value| %>
@@ -77,7 +79,7 @@
 
   <tr> <th class = "registered_on"> <%=l(:label_registered_on)%>:</th><td class="registered_on"> <%= format_date(@person.created_on) %></td> </tr>
   <% unless @person.last_login_on.nil? %>
-	<tr> <th class = "last_login_on"> <%=l(:field_last_login_on)%>:</th><td class="last_login_on"> <%= format_date(@person.last_login_on) %></td> </tr>
+	<tr> <th class = "last_login_on"> <%=l(:field_last_login_on)%>:</th><td class="last_login_on"> <%= format_time(@person.last_login_on) %></td> </tr>
   <% end %>
 
 	<%= call_hook(:view_people_sidebar_attributes_bottom) %>

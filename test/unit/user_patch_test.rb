@@ -1,3 +1,5 @@
+# encoding: utf-8
+#
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
@@ -17,34 +19,35 @@
 # You should have received a copy of the GNU General Public License
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
-# Plugin's routes
-# See: http://guides.rubyonrails.org/routing.html
+require File.expand_path('../../test_helper', __FILE__)
 
-resources :people do
-    collection do
-      get :bulk_edit, :context_menu, :edit_mails, :preview_email, :avatar
-      post :bulk_edit, :bulk_update, :send_mails
-      delete :bulk_destroy
-    end
-    member do
-      get 'tabs/:tab' => 'people#show', :as => "tabs"
-      get 'load_tab' => 'people#load_tab', :as => "load_tab"
-    end
-end
+class UserPatchTest < ActiveSupport::TestCase
 
-resources :departments do
-  member do
-    get :autocomplete_for_person
-    post :add_people
-    delete :remove_person
+  fixtures :users, :projects, :roles, :members, :member_roles
+  fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
+
+  def setup
+    Setting.plugin_redmine_people = {}
+
+    @params =  { 'firstname' => 'newName', 'language' => 'ru'}
+    @user = User.find(4)
+    User.current = @user
   end
-end
 
-resources :people_settings do
-  collection do
-    get :autocomplete_for_user
+  def test_save_without_own_data_access
+    @user.safe_attributes = @params
+    @user.save!
+    @user.reload
+    assert_not_equal 'newName', @user.firstname
+    assert_equal 'ru', @user.language
   end
+
+  def test_save_with_own_data_access
+    Setting.plugin_redmine_people['edit_own_data'] = '1'
+    @user.safe_attributes = @params
+    @user.save!
+    @user.reload
+    assert_equal 'newName', @user.firstname
+  end
+
 end
-
-resources :people_queries
-

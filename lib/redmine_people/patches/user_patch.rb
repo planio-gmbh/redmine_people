@@ -36,6 +36,20 @@ module RedminePeople
             has_one :avatar, :class_name => "Attachment", :as  => :container, :conditions => "#{Attachment.table_name}.description = 'avatar'", :dependent => :destroy
           end
           acts_as_attachable_global
+
+          def self.clear_safe_attributes
+            @safe_attributes.collect! do |attrs, options|
+              if attrs.collect!(&:to_s).include?('firstname') 
+                [attrs - ['firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields'] , options]
+              else
+                [attrs, options]
+              end
+            end
+          end
+          self.clear_safe_attributes
+
+          safe_attributes 'firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields',
+          :if => lambda {|user, current_user| current_user.allowed_people_to?(:edit_people, user) }
         end
       end
 
@@ -48,7 +62,17 @@ module RedminePeople
 
         def allowed_people_to?(permission, person = nil)
           return true if admin?
-          return true if person && person.is_a?(User) && person.id == self.id && [:view_people, :edit_people].include?(permission)
+
+          if person && person.is_a?(User) && person.id == self.id
+            if :view_people == permission
+              return true
+            end
+
+            if :edit_people == permission && Setting.plugin_redmine_people['edit_own_data'].to_i > 0
+              return true
+            end
+          end
+
           return false unless RedminePeople.available_permissions.include?(permission)
           return true if permission == :view_people && self.is_a?(User) && !self.anonymous? && Setting.plugin_redmine_people["visibility"].to_i > 0
 
