@@ -7,7 +7,8 @@
                                :html => { :multipart => true, :method => :put, :id => "add_attachment_form", :style => "display:none;" } do |f|  %>
       <fieldset>
         <%= error_messages_for 'person' %>
-
+        
+        <%= hidden_field_tag 'tab', 'files' %>
         <p><%=l(:label_attachment_plural)%><br /><%= render :partial => 'attachments/form', :locals => {:container => @person} %></p>
         <%= submit_tag l(:button_save) -%>   
         <%= link_to l(:button_cancel), {}, :onclick => "$('#add_attachment_form').hide(); $('#add_attachment_link').show(); return false;"  %>  

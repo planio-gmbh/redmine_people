@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class PeopleSettingsControllerTest < ActionController::TestCase
+  include RedminePeople::TestCase::TestHelper
 
   fixtures :projects,
            :users,
@@ -39,7 +40,7 @@ class PeopleSettingsControllerTest < ActionController::TestCase
     @user = User.find(4)
 
     # Remove accesses operations
-    Setting.plugin_redmine_people = {}
+    Setting.plugin_redmine_people[:users_acl] = {}
   end
 
   def test_get_index

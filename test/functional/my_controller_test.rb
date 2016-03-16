@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@ class MyControllerTest < ActionController::TestCase
   def test_account_with_edit_own_data
     with_people_settings 'edit_own_data' => '1' do
       post :account, { :user => { :firstname => 'newName', :language => 'ru'} }
-      
+
       assert_redirected_to '/my/account'
 
       user = User.find(2)

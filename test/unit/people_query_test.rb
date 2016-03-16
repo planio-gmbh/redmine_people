@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -22,6 +22,8 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class PeopleQueryTest < ActiveSupport::TestCase
+  include RedminePeople::TestCase::TestHelper
+
   fixtures :projects,
            :users,
            :roles,
@@ -45,13 +47,15 @@ class PeopleQueryTest < ActiveSupport::TestCase
   def setup
     # Remove accesses operations
     Setting.plugin_redmine_people = {}
-
+   
     @query = PeopleQuery.new(:name => '_')
     @admin = Person.find(1)
     @person_2 = Person.find(2)
     @person_4 = Person.find(4)
-
+ 
     @queries = PeopleQuery.order('id').all
+
+    User.current = @person_4
   end
 
   def test_visible_and_visible?
@@ -78,24 +82,20 @@ class PeopleQueryTest < ActiveSupport::TestCase
   end
 
   def test_object_scope_with_department
-    # With parent department
-    hash = {
+    p = lambda { |v| return {
       :f =>['department_id'],
       :op => {'department_id' => "="},
-      :v => {'department_id' => ['1']}}
+      :v => {'department_id' => [v.to_s]}
+      }
+    }
 
-    @query = @query.build_from_params(hash)
+    # With parent department
+    @query = @query.build_from_params(p.call(1))
     assert_equal [4], @query.objects_scope.map(&:id)
 
     # With sub department
-    hash = {
-      :f =>['department_id'],
-      :op => {'department_id' => "="},
-      :v => {'department_id' => ['3']}}
-
-    @query = @query.build_from_params(hash)
+    @query = @query.build_from_params(p.call(3))
     assert_equal [4], @query.objects_scope.map(&:id)
-
   end
 
 end

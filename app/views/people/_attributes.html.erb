@@ -16,6 +16,10 @@
 	<% if !@person.job_title.blank? %>
 	<tr> <th class = "job_title"><%= l(:label_people_job_title) %>:</th><td class="job_title title"><%= @person.job_title %></td></tr>
 	<% end %>
+	<% if !@person.manager.blank? %>
+		<tr>
+		<th class = "manager"><%= l(:label_people_manager) %>:</th><td class="manager title"><%= link_to_user(@person.manager) %></td></tr>
+	<% end %>
 	<tr>
 		<th class = "address"><%= l(:label_people_address) %>:</th>
 		<td class="address adr"><%= @person.address %>

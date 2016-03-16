@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -21,8 +21,11 @@ requires_redmine_crm :version_or_higher => '0.0.19' rescue raise "\n\033[31mRedm
 
 require 'redmine_people'
 
-PEOPLE_VERSION_NUMBER = '1.1.1'
+PEOPLE_VERSION_NUMBER = '1.2.0'
 PEOPLE_VERSION_TYPE = "Light version"
+
+QUOTED_TRUE = ActiveRecord::Base.connection.quoted_true.gsub(/'/, '')
+QUOTED_FALSE = ActiveRecord::Base.connection.quoted_false.gsub(/'/, '')
 
 Redmine::Plugin.register :redmine_people do
   name "Redmine People plugin (#{PEOPLE_VERSION_TYPE})"

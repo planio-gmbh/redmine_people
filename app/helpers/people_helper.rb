@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -21,8 +21,12 @@
 
 module PeopleHelper
 
+  def person_age(age)
+    Setting.plugin_redmine_people["hide_age"].to_i > 0 ? '' : "(#{age + 1})"
+  end
+
   def birthday_date(person)
-    ages = Setting.plugin_redmine_people["hide_age"].to_i > 0 ? '' : "(#{person.age + 1})"
+    ages = person_age(person.age)
     if person.birthday.day == Date.today.day && person.birthday.month == Date.today.month
        "#{l(:label_today).capitalize} #{ages}"
     else
@@ -101,13 +105,6 @@ module PeopleHelper
     else
       content_tag(:span, "#{person_avatar} #{person_name}".html_safe, :class => "person")
     end
-  end
-
-  def people_tabs
-    [{:name => 'activity', :partial => 'activity', :label => l(:label_activity)},
-     {:name => 'files', :partial => 'attachments', :label => l(:label_attachment_plural)},
-     {:name => 'projects', :partial => 'projects', :label => l(:label_project_plural)}
-    ]
   end
 
   def render_people_tabs(tabs)

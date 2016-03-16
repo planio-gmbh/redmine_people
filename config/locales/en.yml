@@ -37,6 +37,7 @@ en:
   people_permission_add_people: Add people
   people_permission_delete_people: Delete people
   people_permission_add_attachments: Add atthachments
+  people_permission_edit_notification: Edit notification
 
   #0.0.2
   label_people_acl_settings: ACL settings
@@ -87,3 +88,37 @@ en:
   label_people_hide_age: Hide age
   label_people_is_system: System
   label_people_edit_own_data: Edit own data
+
+  # 1.2.0
+  label_notification_description: Description
+  label_notification_frequency: Frequency
+  label_notification_active: Active
+  label_notification_start_date: Start date
+  label_notification_end_date: End date
+  label_notification_new: New notification
+  label_notification_plural: Notifications
+  label_notification_successful_update: Notification succeful updated
+  label_notification: Notification
+  label_people_use_notification: Use notifications
+  field_frequency: Frequency
+  field_end_date: End date
+  field_kind: Type
+
+  frequency_once: once
+  frequency_everyday: every day
+  frequency_wday: once a week
+  frequency_mday: once a month
+
+  notification_kind_notice: Notice
+  notification_kind_warning: Warinig
+  notification_kind_error: Error
+  notification_status_active: Active
+  notification_status_all: All
+  label_people_close: Close
+  label_people_birthday_today: Today birthdays
+  label_people_birthday_tomorrow: Tomorrow birthdays
+  label_people_birthday_this_week: This week birthdays
+  label_people_show_birthday_notifications: Show birthday notifications
+  label_people_subordinates: Subordinates
+  label_people_manager: Manager
+  people_permission_edit_subordinates: Edit subordinates

@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -23,15 +23,20 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class DepartmentsControllerTest < ActionController::TestCase
   
-  fixtures :users
+  fixtures :users, :projects, :roles, :members, :member_roles,
+           :enabled_modules, :issue_statuses, :issues, :trackers
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:departments, :people_information])
-
+                            [:departments, :people_information, :attachments])
   def setup
     @person = Person.find(4)
     @department = Department.find(2)
+    set_fixtures_attachments_directory
+  end
+
+  def teardown
+    set_tmp_attachments_directory
   end
 
   def access_message(action)
@@ -81,6 +86,12 @@ class DepartmentsControllerTest < ActionController::TestCase
     assert_select 'h3', /FBI department 2/
   end
 
+  def test_load_tab
+    xhr :get, :load_tab, :tab_name => 'files', :partial => 'attachments', :id => 2
+    assert_response :success
+    assert_match /document.txt/,  @response.body
+  end
+
   def test_post_create
     @request.session[:user_id] = 1
     post :create, :department => { :name => 'New Department' }
@@ -88,12 +99,26 @@ class DepartmentsControllerTest < ActionController::TestCase
     assert_equal 'New Department', Department.last.name
   end
 
-  def test_post_update
+  def test_post_update_with_attachment
     @request.session[:user_id] = 1
-    post :update, :id => @department.id, :department => { :name => 'New Department' }
+    post :update, :id => @department.id,
+      :department => { :name => 'New Department' }, 
+      :attachments => {'4' => {'file' => uploaded_test_file('testfile.txt', 'text/plain'), 'description' => 'test file'}}
+    
     assert_response 302
-    @department.reload
-    assert_equal 'New Department', @department.name
+
+    assert_equal 'New Department', @department.reload.name
+    
+    attachment = Attachment.order('id DESC').first
+
+    assert_equal @department, attachment.container
+    assert_equal 1, attachment.author_id
+    assert_equal 'testfile.txt', attachment.filename
+    assert_equal 'text/plain', attachment.content_type
+    assert_equal 'test file', attachment.description
+    #assert_equal 59, attachment.filesize
+    assert File.exists?(attachment.diskfile)
+   # assert_equal 59, File.size(attachment.diskfile)
   end
 
   def test_post_destroy

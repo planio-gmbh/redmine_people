@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -32,11 +32,46 @@ class PersonTest < ActiveSupport::TestCase
 
   def setup
     # Remove accesses operations
+    User.current = nil
     Setting.plugin_redmine_people = {}
 
-    User.current = nil
-    @params =  { 'firstname' => 'newName', 'mail' => 'new@mail.ru', 'information_attributes' => { 'phone' => '89555555555'}}
+    @admin = User.find(1)
+    @params =  { 'firstname' => 'newName', 'mail' => 'new@mail.ru', 'information_attributes' => { 'id' => 4, 'phone' => '89555555555', 'is_system' => QUOTED_TRUE}}
     @person = Person.find(4)
+  end
+
+  def test_manager
+    assert_equal 3, @person.manager.id
+  end
+  
+  def test_subordinates
+    assert (not Person.new.subordinates.any?)
+    assert (not @person.subordinates.any?)
+    assert_equal [4], Person.find(3).subordinates.map(&:id)
+  end
+
+  def test_managers
+    assert_equal [3], Person.managers.map(&:id)
+  end
+
+  def test_available_managers
+    assert_equal [1, 2, 3, 4, 5, 7, 8, 9], Person.new.available_managers.map(&:id).sort
+    assert_equal [1, 2, 3, 5, 7, 8, 9], @person.available_managers.map(&:id).sort
+    assert_equal [1, 2, 5, 7, 8, 9], Person.find(3).available_managers.map(&:id).sort
+  end
+
+  def test_available_subordinates
+    assert_equal [1, 2, 3, 4, 5, 7, 8, 9], Person.new.available_subordinates.map(&:id).sort
+    assert_equal [1, 2, 5, 7, 8, 9], @person.available_subordinates.map(&:id).sort
+    assert_equal [1, 2, 5, 7, 8, 9], Person.find(3).available_subordinates.map(&:id).sort
+  end
+
+  def test_remove_subordinate
+    User.current = @admin
+
+    person_3 = Person.find(3)
+    person_3.remove_subordinate(4)
+    assert_equal nil, @person.reload.manager_id
   end
 
   def test_save_without_access
@@ -64,6 +99,9 @@ class PersonTest < ActiveSupport::TestCase
     assert_equal 'newName', @person.reload.firstname
     assert_equal 'new@mail.ru', @person.email
     assert_equal '89555555555', @person.phone
+
+    # Can not change its own system fields
+    assert (not @person.is_system)
   end
 
   def test_save_with_edit_people_access
@@ -73,6 +111,39 @@ class PersonTest < ActiveSupport::TestCase
     @person.safe_attributes = @params
     @person.save!
     assert_equal '89555555555', @person.phone
+    assert_equal true, @person.is_system
+  end
+
+  def test_create_with_edit_people_access
+    User.current = User.find(2)
+    PeopleAcl.create(2, ['edit_people'])
+
+    person = Person.new
+    person.login = 'login'
+
+    person.safe_attributes = { 'lastname' => 'lastname',
+      'firstname' => 'newName', 'mail' => 'new@mail.ru', 
+      'information_attributes' => { 'phone' => '89555555555', 'is_system' => QUOTED_TRUE}}
+
+    person.save!
+    assert_equal '89555555555', person.phone
+    assert_equal true, person.is_system
+  end
+
+  def test_save_with_edit_subordinates_access
+    manager = Person.find(3)
+    User.current = manager
+    
+    # Without permission
+    @person.safe_attributes = @params
+    @person.save!
+    assert_not_equal 'newName', @person.reload.firstname
+    
+    # Adds permission
+    PeopleAcl.create(3, ['edit_subordinates'])
+    @person.safe_attributes = @params
+    @person.save!
+    assert_equal 'newName', @person.reload.firstname
   end
 
   def test_destroy

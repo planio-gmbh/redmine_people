@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'people_acl'
+require 'redmine_activity_crm_fetcher'
 
 Rails.configuration.to_prepare do
   require_dependency 'redmine_people/helpers/redmine_people'
@@ -34,7 +35,10 @@ end
 
 module RedminePeople
   def self.available_permissions
-    [:edit_people, :view_people, :add_people, :delete_people, :edit_departments, :delete_departments, :manage_tags, :manage_public_people_queries]
+    [:edit_people, :view_people, :add_people,
+     :delete_people, :edit_departments, :delete_departments,
+     :manage_tags, :manage_public_people_queries, :edit_subordinates,
+     :edit_notification]
   end
 
   def self.settings() Setting[:plugin_redmine_people] end

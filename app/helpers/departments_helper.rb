@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -72,11 +72,25 @@ module DepartmentsHelper
     p = {:controller => 'people',
      :action => 'index',
      :set_filter => 1,
-     :fields => [:department_id],
-     :values => {:department_id => [department.id]},
-     :operators => {:department_id => '='}
-    }.merge(options)
+     :fields => [:status, :department_id],
+     :values => {:status => [Principal::STATUS_ACTIVE.to_s], :department_id => [department.id]},
+     :operators => {:status => '=', :department_id => '='}}.merge(options)
+
     link_to department.name, p, options
+  end
+
+  def department_tabs
+    [{:name => 'activity', :partial => 'activity', :label => l(:label_activity)},
+     {:name => 'files', :partial => 'attachments', :label => l(:label_attachment_plural)}
+    ]
+  end
+
+  def render_department_tabs(tabs)
+    if tabs.any?
+      render :partial => 'common/department_tabs', :locals => {:tabs => tabs}
+    else
+      content_tag 'p', l(:label_no_data), :class => "nodata"
+    end
   end
 
 end

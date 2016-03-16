@@ -37,6 +37,7 @@ ru:
   people_permission_add_people: Добавление сотрудников
   people_permission_delete_people: Удаление сотрудников
   people_permission_add_attachments: Добавление файлов
+  people_permission_edit_notification: Редактирование оповещений
 
   #0.0.2
   label_people_acl_settings: Права доступа
@@ -59,6 +60,12 @@ ru:
   #0.1.5
   people_permission_delete_departments: Удаление отделов
 
+  #0.1.6
+  label_people_new_mail: Новое сообщение
+
+  #0.1.7
+  label_people_show_for_registered_users: Показывать сотрудников зарегистрированным пользователям
+
   #1.1.0
   label_people_tags_plural: Тэги
   label_visibility_public: всем пользователям
@@ -78,3 +85,37 @@ ru:
   label_people_hide_age: Скрывать возраст
   label_people_is_system: Системный
   label_people_edit_own_data: Редактировать собственные данные
+
+  # 1.2.0
+  label_notification_description: Описание
+  label_notification_frequency: Периодичность
+  label_notification_active: Активно
+  label_notification_start_date: Дата начала показа
+  label_notification_end_date: Дата окончания показа
+  label_notification_new: Новое оповещение
+  label_notification_plural: Оповещения
+  label_notification_successful_update: Оповещение успешно сохранено
+  label_notification: Оповещение
+  label_people_use_notification: Использовать оповещения
+  field_frequency: Периодичность
+  field_end_date: Дата окончания
+  field_kind: Тип
+
+  frequency_once: однократно
+  frequency_everyday: каждый день
+  frequency_wday: раз в неделю
+  frequency_mday: раз в месяц
+
+  notification_kind_notice: Объявление
+  notification_kind_warning: Предупреждение
+  notification_kind_error: Тревога
+  notification_status_active: Активные
+  notification_status_all: Все
+  label_people_close: Закрыть
+  label_people_birthday_today: Дни рождения сегодня
+  label_people_birthday_tomorrow: Дни рождения завтра
+  label_people_birthday_this_week: Дни рождения на этой неделе
+  label_people_show_birthday_notifications: Уведомления о днях рождениях
+  label_people_subordinates: Подчинённые
+  label_people_manager: Менеджер
+  people_permission_edit_subordinates: Редактировать подчиненных

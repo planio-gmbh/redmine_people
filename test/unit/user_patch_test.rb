@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -29,9 +29,33 @@ class UserPatchTest < ActiveSupport::TestCase
   def setup
     Setting.plugin_redmine_people = {}
 
-    @params =  { 'firstname' => 'newName', 'language' => 'ru'}
+    @params =  { 'firstname' => 'newName', 'lastname' => 'lastname', 'mail' => 'mail@mail.com', 'language' => 'ru'}
     @user = User.find(4)
     User.current = @user
+  end
+  
+  def test_create_by_anonumys_self_registration_off
+    Setting.self_registration = '0'
+    User.current = nil
+
+    user = User.new
+    user.safe_attributes = @params
+    user.login = 'login'
+    user.password, @user.password_confirmation = 'password','password'
+
+    assert (not user.save)
+  end
+
+  def test_create_by_anonumys_self_registration_on
+    Setting.self_registration = '1'
+    User.current = nil
+
+    user = User.new
+    user.safe_attributes = @params
+    user.login = 'login'
+    user.password, @user.password_confirmation = 'password','password'
+
+    assert user.save
   end
 
   def test_save_without_own_data_access
@@ -48,6 +72,18 @@ class UserPatchTest < ActiveSupport::TestCase
     @user.save!
     @user.reload
     assert_equal 'newName', @user.firstname
+  end
+
+  def test_allowed_people_to_for_edit_subordinates
+    manager = Person.find(3)
+    subordinate = Person.find(4)
+
+    # Without permission
+    assert (not manager.allowed_people_to?(:edit_people, subordinate) )
+    
+    # Adds permission
+    PeopleAcl.create(3, ['edit_subordinates'])
+    assert manager.allowed_people_to?(:edit_people, subordinate)
   end
 
 end

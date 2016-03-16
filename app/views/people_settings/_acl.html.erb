@@ -56,7 +56,7 @@
 
 <% if @principals.any? %>
   <%= form_tag({:controller => :people_settings, :action => :create}, :remote => true,
-               :method => :post, :id => "people_acl_form", :class => "select-users") do |f| %>
+               :method => :post, :id => "people_acl_form", :class => "select-users") do %>
     <fieldset><legend><%=l(:label_user_new)%></legend>
 
     <p><%= label_tag "user_search", l(:label_user_search) %><%= text_field_tag 'user_search', nil %></p>

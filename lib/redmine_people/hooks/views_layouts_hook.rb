@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ module RedminePeople
   module Hooks
     class ViewsLayoutsHook < Redmine::Hook::ViewListener
       def view_layouts_base_html_head(context={})
-        return stylesheet_link_tag(:people, :plugin => 'redmine_people')
+        return stylesheet_link_tag(:redmine_people, :plugin => 'redmine_people')
       end
     end
   end

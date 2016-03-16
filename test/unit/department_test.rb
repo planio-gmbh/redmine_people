@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -23,11 +23,13 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class DepartmentTest < ActiveSupport::TestCase
   
-  fixtures :users
+  fixtures :users, :projects, :roles, :members, :member_roles,
+           :enabled_modules, :issues, :trackers
+
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:people_information, :departments])
+                            [:people_information, :departments, :attachments])
 
   def setup
     #     1   2
@@ -82,4 +84,21 @@ class DepartmentTest < ActiveSupport::TestCase
     assert_equal ["FBI department 1", "FBI department 1.1", "FBI department 2", "fourth"], @fifth.allowed_parents.compact.map(&:name).sort
   end
 
+  def test_all_childs
+    assert_equal [3, @fourth.id, @fifth.id], @first.all_childs.map(&:id).sort
+  end
+
+  def test_people_of_branch_department
+    assert_equal [4], @first.people_of_branch_department.map(&:id).sort
+    assert_equal [1, 2, 3], @second.people_of_branch_department.map(&:id).sort
+    
+    # Changes department for user 2
+    PeopleInformation.where(:user_id => 1).first.update_attributes(:department_id => @fifth.id)
+    assert_equal [1, 4], @first.people_of_branch_department.map(&:id).sort
+  end
+
+  def test_attachments
+    assert_equal [1], @first.attachments.map(&:id).uniq.sort
+  end
+  
 end

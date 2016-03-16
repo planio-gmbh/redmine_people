@@ -46,7 +46,7 @@
     <p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
     <%= render :partial => people_list_style %>
-    <p class="pagination"><%= pagination_links_full @people_pages, @people_count %></p>
+    <span class="pagination"><%= pagination_links_full @people_pages, @people_count %></span>
 <% end %>
 </div>
 
@@ -56,11 +56,8 @@
 
 <% content_for :sidebar do %>
 
-  <% unless @departments.blank? %>
+  <% unless true || @departments.blank? %>
   <div id="people_departments">
-    <div class="contextual">
-      <%= link_to l(:button_edit), departments_path if User.current.allowed_people_to?(:edit_departments) %>
-    </div>
     <h3><%= l(:label_department_plural) %></h3>
     <%= department_tree_links(@departments) %>
   </div>
@@ -83,4 +80,3 @@
 	<%= stylesheet_link_tag :redmine_people, :plugin => 'redmine_people' %>
 	<meta name = "format-detection" content = "telephone=no">
 <% end %>
-

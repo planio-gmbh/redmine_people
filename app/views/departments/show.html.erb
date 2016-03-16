@@ -30,9 +30,10 @@
     <%= textilizable @department, :background, :attachments => @department.attachments %>
     </div>
   <% end %>
-  <%= link_to_attachments @department, :thumbnails => true %>
   <% end -%>
 </div>
+
+<%= render_department_tabs department_tabs%>
 
 <% content_for :sidebar do %>
   <div id="department_people">

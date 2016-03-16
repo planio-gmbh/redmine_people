@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ class Person < User
   has_one :information, :class_name => "PeopleInformation", :foreign_key => :user_id, :dependent => :destroy
 
   delegate :phone, :address, :skype, :birthday, :job_title, :company, :middlename, :gender, :twitter,
-          :facebook, :linkedin, :department_id, :background, :appearance_date, :is_system,
+          :facebook, :linkedin, :department_id, :background, :appearance_date, :is_system, :manager_id,
           :to => :information, :allow_nil => true
 
   acts_as_customizable
@@ -34,6 +34,8 @@ class Person < User
   accepts_nested_attributes_for :information, :allow_destroy => true, :update_only => true, :reject_if => proc {|attributes| PeopleInformation.reject_information(attributes)}
 
   has_one :department, :through => :information
+
+  has_one :manager, :through => :information
 
   rcrm_acts_as_taggable
 
@@ -54,7 +56,7 @@ class Person < User
                                                                     LOWER(#{Person.table_name}.login) LIKE :search OR
                                                                     LOWER(#{(ActiveRecord::VERSION::MAJOR >= 4) ? (EmailAddress.table_name + '.address') : (Person.table_name + '.mail')}) LIKE :search)", {:search => search.downcase + "%"} )}
 
-  validates_uniqueness_of :firstname, :scope => :lastname
+  scope :managers, lambda { joins("INNER JOIN #{PeopleInformation.table_name} ON #{Person.table_name}.id = #{PeopleInformation.table_name}.manager_id").uniq }
 
   safe_attributes 'custom_field_values',
                   'custom_fields',
@@ -79,6 +81,33 @@ class Person < User
     nil
   end
 
+  def subordinates
+    scope = Person.eager_load(:information).where("#{PeopleInformation.table_name}.manager_id" => id.to_i)
+    scope = scope.visible if Person.respond_to?(:visible)
+    scope
+  end
+
+  def available_managers
+    scope = Person.eager_load(:information).where("#{Person.table_name}.type" => 'User').logged
+    scope = scope.visible if Person.respond_to?(:visible)
+
+    if self.id.present?
+      scope = scope.where("#{PeopleInformation.table_name}.manager_id != ? OR #{PeopleInformation.table_name}.manager_id IS NULL", id.to_i).where("#{Person.table_name}.id <> ?", id.to_i)
+    end
+    scope
+  end
+
+  def available_subordinates
+    scope = Person.eager_load(:information).where("#{Person.table_name}.type" => 'User').logged
+    scope = scope.visible if Person.respond_to?(:visible)
+
+    if self.id.present?
+      scope = scope.where("#{PeopleInformation.table_name}.manager_id != ? OR #{PeopleInformation.table_name}.manager_id IS NULL", id.to_i).where("#{Person.table_name}.id <> ?", id.to_i)
+      scope = scope.where("#{Person.table_name}.id != ?", manager_id.to_i) if manager_id.present?
+    end
+    scope
+  end
+
   def phones
     @phones || self.phone ? self.phone.split( /, */) : []
   end
@@ -93,7 +122,20 @@ class Person < User
   end
 
   def self.next_birthdays(limit = 10)
-    Person.eager_load(:information).where("#{PeopleInformation.table_name}.birthday IS NOT NULL").sort_by(&:next_birthday).first(limit)
+    Person.eager_load(:information).active.where("#{PeopleInformation.table_name}.birthday IS NOT NULL").sort_by(&:next_birthday).first(limit)
+  end
+
+  def self.tomorrow_birthdays
+    Person.next_birthdays.select{|p| p.next_birthday == Date.today + 1 }
+  end
+
+  def self.today_birthdays
+    Person.next_birthdays.select{|p| p.next_birthday == Date.today }
+  end
+
+  def self.week_birthdays
+    Person.next_birthdays.select{|p| p.next_birthday <= Date.today.end_of_week &&
+      p.next_birthday > Date.tomorrow }
   end
 
   def age
@@ -122,6 +164,14 @@ class Person < User
 
   def available_custom_fields
     CustomField.where("type = 'UserCustomField'").sorted.to_a
+  end
+
+  def remove_subordinate(subordinate_id)
+    subordinate = Person.find(subordinate_id.to_i)
+    return false if subordinate.blank?
+
+    subordinate.safe_attributes = { 'information_attributes' => {'manager_id' => nil}}
+    subordinate.save
   end
 
 end

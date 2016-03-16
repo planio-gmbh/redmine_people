@@ -18,8 +18,6 @@
     <%= hidden_field_tag 'settings[hide_age]', 0, :id => nil %>
     <%= check_box_tag 'settings[hide_age]', 1, Setting.plugin_redmine_people["hide_age"].to_i > 0 %>
   </p>
-
-
   </div>
   <%= submit_tag l(:button_apply) %>
 <% end %>

@@ -361,3 +361,45 @@ span.tag-label, span.tag-input {
 .tab-placeholder.active {
     display: block !important;
 }
+
+/*****Notifications*****/
+#notification-show table{
+  width: 100%;
+}
+
+.crm_pull_right{
+  float: right;
+}
+
+.person_card{
+  float: left;
+  width: 30%;
+  padding: 10px;
+}
+
+.person_card:hover {
+  background-color: #ffffdd;
+}
+
+.person_card a:hover{
+  text-decoration: none;
+}
+
+.person_card .gravatar{
+  float: left;
+  margin-right: 5px;
+}
+
+.person_card .contacts_header{
+  margin-bottom: 0px;
+}
+
+.birthdays{
+  margin-top: 20px;
+}
+
+.birthdays:after {
+  clear: both;
+  content: '';
+  display: block;
+}

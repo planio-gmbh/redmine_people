@@ -1,11 +1,13 @@
 <div class = "box tabular" id="person_data">
-		<p id="issue_is_private_wrap">
-			<%= hidden_field_tag 'person[information_attributes][is_system]', 0, :id => nil %>
-			<%= check_box_tag 'person[information_attributes][is_system]', 1, @person.is_system %><label class="inline" for="person_information_attributes_is_system" id="person_is_system_label"><%= l(:label_people_is_system) %></label>
-		</p>
+    <% if PeopleInformation::modified_system_fields?(@person) %>
+			<p id="issue_is_private_wrap">
+				<%= hidden_field_tag 'person[information_attributes][is_system]', 0, :id => nil %>
+				<%= check_box_tag 'person[information_attributes][is_system]', 1, @person.is_system %><label class="inline" for="person_information_attributes_is_system" id="person_is_system_label"><%= l(:label_people_is_system) %></label>
+	  	</p>
+  	<% end %>
 	<p class="avatar" id="watchers">
 		<%= avatar(@person, :size => "64", :height => 64, :width => 64, :style => "vertical-align: middle;") %>
-		<%= link_to image_tag('delete.png'), {:controller => 'attachments', :action => 'destroy', :id => @person.avatar},
+		<%= link_to image_tag('delete.png'), destroy_avatar_person_path(@person),
 	                                         :confirm => l(:text_are_you_sure),
 	                                         :method => :delete,
 	                                         :class => 'delete',
@@ -18,6 +20,11 @@
 	<%= f.fields_for :information do |information| %>
 	  <p><%= information.text_field :middlename, :label => l(:label_people_middlename) %></p>
 		<p><%= f.text_field :lastname, :required => true %></p>
+
+    <% if (@person.available_managers.any? || @person.new_record?) %>
+		  <p><%= information.select :manager_id, options_for_select( @person.available_managers.map{ |u| [u.name, u.id]} , @person.manager_id), :include_blank => true, :label => l(:label_people_manager) %></p>
+    <% end %>
+
 		<% if @person.id != User.current.id %>
 		<p><%= f.select :status, options_for_select([[l(:status_active), '1'], [l(:status_locked), '3']], @person.status.to_s) %></p>
 		<% end %>

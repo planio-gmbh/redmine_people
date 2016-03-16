@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@ class PeopleSettingsController < ApplicationController
 
   helper :departments
   helper :people
+  helper :people_notifications
 
   def index
     @departments = Department.all
@@ -80,7 +81,7 @@ private
     @principals = Principal.where(:status => [Principal::STATUS_ACTIVE, Principal::STATUS_ANONYMOUS]).order('type, login, lastname ASC')
     @principals = @principals.like(params[:q]) if params[:q]
     @principals = @principals.where("id NOT IN(?)", find_acl.map(&:principal_id) ) if find_acl.any?
-    @principals.limit(100)
+    @principals = @principals.limit(100)
   end
 
 end

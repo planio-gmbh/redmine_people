@@ -4,6 +4,15 @@ Redmine People plugin - User management plugin for redmine
 Copyright (C) 2011-2015 Kirill Bezrukov
 http://www.redminecrm.com/
 
+== 2016-03-09 v1.2.0
+
+* Activity and files for deparments
+* Notifications and birthdays notifications
+* Managers and subordinates with edit permissions
+* Pagination fix for Redmine 3.2+
+* Fixed bug with self registration
+* Fixed light version 500 error
+
 == 2015-12-11 v1.1.1
 
 * Edit own data restriction setting

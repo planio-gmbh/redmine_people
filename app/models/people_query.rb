@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -44,6 +44,7 @@ class PeopleQuery < Query
     QueryColumn.new(:appearance_date, :sortable => "#{PeopleInformation.table_name}.appearance_date", :caption => :label_people_appearance_date),
     QueryColumn.new(:last_login_on, :sortable => "#{Person.table_name}.last_login_on", :caption => :field_last_login_on),
     QueryColumn.new(:department_id, :sortable => "#{Department.table_name}.name", :groupable => "#{PeopleInformation.table_name}.department_id", :caption => :label_people_department),
+    QueryColumn.new(:manager_id, :sortable => "#{Person.table_name}.firstname", :caption => :label_people_manager , :groupable => "#{PeopleInformation.table_name}.manager_id"),
     QueryColumn.new(:is_system, :sortable => "#{PeopleInformation.table_name}.is_system", :caption => :label_people_is_system),
     QueryColumn.new(:status, :sortable => "#{Person.table_name}.status", :caption => :field_status),
     QueryColumn.new(:tags, :caption => :label_people_tags_plural)
@@ -124,9 +125,11 @@ class PeopleQuery < Query
       name_prefix = (level > 0 ? '-' * 2 * level + ' ' : '') #'&nbsp;'
       departments << [(name_prefix + department.name).html_safe, department.id.to_s]
     end
-    add_available_filter("department_id", :type => :list_optional, :name => l(:label_people_department), :order => 17,
+    add_available_filter("department_id", :type => :list_optional, :name => l(:label_people_department), :order => 18,
       :values => departments
     ) if departments.any?
+
+    @available_filters ||= {}
   end
 
   def default_columns_names
@@ -143,6 +146,7 @@ class PeopleQuery < Query
 
   def objects_scope(options={})
     scope = Person.where(:type => 'User').logged
+    scope = scope.visible if Person.respond_to?(:visible)
 
     options[:search].split(' ').collect{ |search_string| scope = scope.seach_by_name(search_string) } if options[:search].present?
 

@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@ module RedminePeople
 
           def self.clear_safe_attributes
             @safe_attributes.collect! do |attrs, options|
-              if attrs.collect!(&:to_s).include?('firstname') 
+              if attrs.collect!(&:to_s).include?('firstname')
                 [attrs - ['firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields'] , options]
               else
                 [attrs, options]
@@ -49,7 +49,7 @@ module RedminePeople
           self.clear_safe_attributes
 
           safe_attributes 'firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields',
-          :if => lambda {|user, current_user| current_user.allowed_people_to?(:edit_people, user) }
+          :if => lambda {|user, current_user| current_user.allowed_people_to?(:edit_people, user) || (user.new_record? && current_user.anonymous? && Setting.self_registration?) }
         end
       end
 
@@ -61,22 +61,49 @@ module RedminePeople
         end
 
         def allowed_people_to?(permission, person = nil)
+          unless RedminePeople.available_permissions.include?(permission)
+            raise "The permission #{permission} does not exist"
+          end
+
           return true if admin?
 
+          if self.respond_to?(:"check_permission_#{permission.to_s}", true)
+            self.send("check_permission_#{permission}".to_sym, person)
+          else
+            has_permission?(permission)
+          end
+        end
+
+        def has_permission?(permission)
+          (self.groups + [self]).map{|principal| PeopleAcl.allowed_to?(principal, permission) }.inject{|memo,allowed| memo || allowed }
+        end
+
+        protected
+
+        def check_permission_view_people(person)
           if person && person.is_a?(User) && person.id == self.id
-            if :view_people == permission
+            return true
+          elsif self.is_a?(User) && !self.anonymous? && Setting.plugin_redmine_people["visibility"].to_i > 0
+            return true
+          end
+          has_permission?(:view_people)
+        end
+
+        def check_permission_edit_people(person)
+          if person && person.is_a?(User)
+            # Check to edit himself
+            if person.id == self.id && Setting.plugin_redmine_people['edit_own_data'].to_i > 0
               return true
             end
 
-            if :edit_people == permission && Setting.plugin_redmine_people['edit_own_data'].to_i > 0
+            # Check to edit subordinates.
+            # Works only for persons.
+            if person.respond_to?(:manager_id) && has_permission?(:edit_subordinates) && self.id == person.manager_id
               return true
             end
           end
 
-          return false unless RedminePeople.available_permissions.include?(permission)
-          return true if permission == :view_people && self.is_a?(User) && !self.anonymous? && Setting.plugin_redmine_people["visibility"].to_i > 0
-
-          (self.groups + [self]).map{|principal| PeopleAcl.allowed_to?(principal, permission) }.inject{|memo,allowed| memo || allowed }
+          has_permission?(:edit_people)
         end
 
       end
@@ -88,5 +115,3 @@ end
 unless User.included_modules.include?(RedminePeople::Patches::UserPatch)
   User.send(:include, RedminePeople::Patches::UserPatch)
 end
-
-

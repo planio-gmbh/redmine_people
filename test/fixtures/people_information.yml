@@ -70,6 +70,7 @@ people_information_004:
 #  custom_fields: 
   background:
   appearance_date: 2014-07-19
+  manager_id: 3
 people_information_007:
   user_id: 7
   is_system: true

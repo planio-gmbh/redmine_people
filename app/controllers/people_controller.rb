@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -22,11 +22,12 @@ class PeopleController < ApplicationController
 
   Mime::Type.register "text/x-vcard", :vcf
 
-  before_filter :find_person, :only => [:show, :edit, :update, :destroy, :edit_membership, :destroy_membership, :load_tab]
+  before_filter :find_person, :only => [:show, :edit, :update, :destroy, :edit_membership, :destroy_membership, :destroy_avatar, :load_tab, :remove_subordinate]
   before_filter :authorize_people, :except => [:avatar, :context_menu, :autocomplete_tags]
+
   before_filter :bulk_find_people, :only => [:context_menu]
   before_filter :visible?, :only => [:show, :load_tab]
-  before_filter :load_person_attachments, :load_person_memberships, :load_person_events, :only => [:show, :load_tab]
+  before_filter :load_person_attachments, :load_person_memberships, :load_person_events, :load_subordinates, :only => [:show, :load_tab]
 
   include PeopleHelper
   helper :queries
@@ -108,7 +109,7 @@ class PeopleController < ApplicationController
   def new
     @person = Person.new(:language => Setting.default_language, :mail_notification => Setting.default_notification_option)
     @person.build_information
-    @person.safe_attributes = { 'information_attributes' => { 'department_id' => params[:department_id] }}
+    @person.safe_attributes = { 'information_attributes' => { 'department_id' => params[:department_id], 'manager_id' => params[:manager_id] }}
 
     @auth_sources = AuthSource.all
     @departments = Department.all.sort
@@ -118,17 +119,17 @@ class PeopleController < ApplicationController
     (render_403; return false) unless @person.editable_by?(User.current)
     @person.safe_attributes = params[:person]
     if @person.save
-      flash[:notice] = l(:notice_successful_update)
-      attach_avatar
       attachments = Attachment.attach_files(@person, params[:attachments])
       render_attachment_warning_if_needed(@person)
+      flash[:notice] = l(:notice_successful_update)
+      attach_avatar
       respond_to do |format|
-        format.html { redirect_to :action => "show", :id => @person }
+        format.html { redirect_to :action => "show", :id => @person, :tab => params[:tab] }
         format.api  { head :ok }
       end
     else
       respond_to do |format|
-        format.html { render :action => "edit"}
+        format.html { render :action => "edit", :status => 400}
         format.api  { render_validation_errors(@person) }
       end
     end
@@ -219,12 +220,28 @@ class PeopleController < ApplicationController
 
   end
 
+  def destroy_avatar
+    @person.avatar.destroy if @person.avatar.present?
+
+    redirect_to edit_person_path(@person)
+  end
+
+  def remove_subordinate
+    @person.remove_subordinate(params[:subordinate_id])
+
+    load_subordinates
+    respond_to do |format|
+      format.html { redirect_to :controller => 'people', :action => 'show', :tab => 'subordinates', :id => @person.id}
+      format.js
+    end
+  end
+
 private
   def authorize_people
     allowed = case params[:action].to_s
       when "create", "new"
         User.current.allowed_people_to?(:add_people, @person)
-      when "update", "edit"
+      when "update", "edit", "destroy_avatar", "remove_subordinate"
         User.current.allowed_people_to?(:edit_people, @person)
       when "destroy"
         User.current.allowed_people_to?(:delete_people, @person)
@@ -299,6 +316,21 @@ private
   def load_person_events
     events = Redmine::Activity::Fetcher.new(User.current, :author => @person).events(nil, nil, :limit => 10)
     @events_by_day = events.group_by(&:event_date)
+  end
+
+  def load_subordinates
+    @limit = per_page_option
+    @subordinates_count = @person.subordinates.count
+
+    if Redmine::VERSION.to_s > '2.5'
+      @subordinate_pages = Paginator.new(@subordinates_count,  @limit, params[:page])
+      @offset = @subordinate_pages.offset
+    else
+      @subordinate_pages = Paginator.new(self, @subordinates_count,  @limit, params[:page])
+      @offset = @subordinate_pages.current.offset
+    end
+
+    @subordinates = @person.subordinates.limit(@limit).offset(@offset)
   end
 
 end

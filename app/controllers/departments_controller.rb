@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@ class DepartmentsController < ApplicationController
   before_filter :find_department, :except => [:index, :create, :new]
   before_filter :require_admin, :only => [:destroy, :new, :create]
   before_filter :authorize_people, :only => [:update, :edit, :add_people, :remove_person]
+  before_filter :load_department_events, :load_department_attachments, :only => [:show, :load_tab]
 
   helper :attachments
 
@@ -43,7 +44,10 @@ class DepartmentsController < ApplicationController
   def update
     @department.safe_attributes = params[:department]
 
-    if @department.save 
+    if @department.save
+      attachments = Attachment.attach_files(@department, params[:attachments])
+      render_attachment_warning_if_needed(@department)
+
       respond_to do |format| 
         format.html { redirect_to :action => "show", :id => @department } 
         format.api  { head :ok }
@@ -112,6 +116,10 @@ class DepartmentsController < ApplicationController
     render :layout => false
   end  
 
+  def load_tab
+
+  end
+
 private
   def find_department
     @department = Department.find(params[:id])
@@ -139,5 +147,14 @@ private
       deny_access  
     end
   end  
+
+  def load_department_attachments
+    @department_attachments = @department.attachments
+  end
+
+  def load_department_events
+    events = Redmine::Activity::CrmFetcher.new(User.current, :author => @department.people_of_branch_department).events(nil, nil, :limit => 10)
+    @events_by_day = events.group_by(&:event_date)
+  end
 
 end

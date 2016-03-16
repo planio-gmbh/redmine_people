@@ -1,7 +1,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ module DepartmentNestedSet
   end
 
   private
-
+  
   def target_lft
     siblings_rgt = self.class.where(:parent_id => parent_id).where("name < ?", name).maximum(:rgt)
     if siblings_rgt

@@ -3,7 +3,7 @@
 # This file is a part of Redmine CRM (redmine_contacts) plugin,
 # customer relationship management plugin for Redmine
 #
-# Copyright (C) 2011-2015 Kirill Bezrukov
+# Copyright (C) 2011-2016 Kirill Bezrukov
 # http://www.redminecrm.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
@@ -22,17 +22,22 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class PeopleControllerTest < ActionController::TestCase
-
+  include RedminePeople::TestCase::TestHelper
   fixtures :users
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:departments, :people_information, :custom_fields, :custom_values])
+                            [:departments, :people_information, :custom_fields, :custom_values, :attachments])
 
   def setup
     @person = Person.find(4)
     # Remove accesses operations
     Setting.plugin_redmine_people = {}
+    set_fixtures_attachments_directory
+  end
+
+  def teardown
+    set_tmp_attachments_directory
   end
 
   def access_message(action)
@@ -51,6 +56,9 @@ class PeopleControllerTest < ActionController::TestCase
       post action, :id => @person.id
       assert_response 302, access_message(action)
     end
+
+    delete :destroy_avatar, :id => @person.id
+    assert_response 302
   end
 
   def test_with_deny_user
@@ -66,6 +74,9 @@ class PeopleControllerTest < ActionController::TestCase
       post action, :id => @person.id
       assert_response 403, access_message(action)
     end
+
+    delete :destroy_avatar, :id => @person.id
+    assert_response 403
   end
 
   def test_get_index
@@ -74,6 +85,14 @@ class PeopleControllerTest < ActionController::TestCase
     assert_response :success
     assert_template :index
     assert_select 'h1 a', 'Redmine Admin'
+  end
+
+  def test_get_index_without_departments
+    @request.session[:user_id] = 1
+    Department.delete_all
+    get :index, :set_filter => '1'
+    assert_response :success
+    assert_template :index
   end
 
   def test_get_show
@@ -133,6 +152,25 @@ class PeopleControllerTest < ActionController::TestCase
     assert_equal ['firstname','Facebook2'], [@person.firstname, @person.facebook]
   end
 
+  def test_update_with_attachment
+    @request.session[:user_id] = 1
+    post :update, :id => '8', :tab => 'files',
+      :attachments => {'1' => {'file' => uploaded_test_file('testfile.txt', 'text/plain'), 'description' => 'test file'}}
+
+    assert_response 302
+    assert_redirected_to tabs_person_path(8, :tab => 'files')
+
+    attachment = Attachment.order('id DESC').first
+
+    assert_equal User.find(8), attachment.container
+    assert_equal 1, attachment.author_id
+    assert_equal 'testfile.txt', attachment.filename
+    assert_equal 'text/plain', attachment.content_type
+    assert_equal 'test file', attachment.description
+
+    assert File.exists?(attachment.diskfile)
+  end
+
   def test_destroy
     @request.session[:user_id] = 1
     post :destroy, :id => 4
@@ -140,6 +178,23 @@ class PeopleControllerTest < ActionController::TestCase
     assert_raises(ActiveRecord::RecordNotFound) do
       Person.find(4)
     end
+  end
+
+  def test_destroy_avatar
+    @request.session[:user_id] = 1
+    avatar = people_uploaded_file("testfile_1.png", 'image/png')
+
+    a = Attachment.new(:container => @person,
+                       :file =>  avatar, :description => 'avatar',
+                       :author => User.find(1))
+    assert a.save
+
+    assert @person.avatar.present?
+
+    delete :destroy_avatar, :id => 4
+
+    assert_redirected_to :action => 'edit', :id => 4
+    assert @person.reload.avatar.blank?
   end
 
   def test_load_tab

@@ -37,8 +37,13 @@
 
   <%= call_hook(:view_people_show_details_bottom, :person => @person) %>
 </div>
-
-<%= render_people_tabs people_tabs%>
+<% tabs = [{:name => 'activity', :partial => 'activity', :label => l(:label_activity)},
+     {:name => 'files', :partial => 'attachments', :label => l(:label_attachment_plural)},
+     {:name => 'projects', :partial => 'projects', :label => l(:label_project_plural)},
+     ]
+  tabs << {:name => 'subordinates', :partial => 'subordinates', :label => l(:label_people_subordinates)} if @person.subordinates.any?
+%>
+<%= render_people_tabs tabs%>
 
 
 <% content_for :sidebar do %>
