@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,10 +47,20 @@ class PeopleQuery < Query
     QueryColumn.new(:manager_id, :sortable => "#{Person.table_name}.firstname", :caption => :label_people_manager , :groupable => "#{PeopleInformation.table_name}.manager_id"),
     QueryColumn.new(:is_system, :sortable => "#{PeopleInformation.table_name}.is_system", :caption => :label_people_is_system),
     QueryColumn.new(:status, :sortable => "#{Person.table_name}.status", :caption => :field_status),
-    QueryColumn.new(:tags, :caption => :label_people_tags_plural)
+    QueryColumn.new(:tags, :caption => :label_people_tags_plural),
+    QueryColumn.new(:created_on, :sortable => "#{Person.table_name}.created_on"),
+    QueryColumn.new(:updated_on, :sortable => "#{Person.table_name}.updated_on"),
+    QueryColumn.new(
+      :workday_length,
+      sortable: lambda {
+        column = "#{PeopleInformation.table_name}.workday_length"
+        "CASE WHEN #{column} IS NULL THEN #{Setting.plugin_redmine_people['workday_length']} ELSE #{column} END"
+      },
+      caption: :label_people_workday_length
+    )
   ]
 
-  scope :visible, lambda {|*args|
+  scope :visible, lambda { |*args|
     user = args.shift || User.current
 
     if Redmine::VERSION.to_s < '2.4'
@@ -72,7 +82,7 @@ class PeopleQuery < Query
     end
   }
 
-  def visible?(user=User.current)
+  def visible?(user = User.current)
     return true if user.admin?
     case visibility
     when VISIBILITY_PUBLIC
@@ -100,7 +110,7 @@ class PeopleQuery < Query
 
   def visibility
     if Redmine::VERSION.to_s < '2.4'
-      self.is_public ? VISIBILITY_PUBLIC : VISIBILITY_PRIVATE
+      is_public ? VISIBILITY_PUBLIC : VISIBILITY_PRIVATE
     else
       self[:visibility]
     end
@@ -109,14 +119,14 @@ class PeopleQuery < Query
   def editable_by?(user)
     return false unless user
     # Admin can edit them all and regular users can edit their private queries
-    return true if user.admin? || (self.user_id == user.id)
+    return true if user.admin? || (user_id == user.id)
     # Members can not edit public queries that are for all project (only admin is allowed to)
     is_public? && user.allowed_people_to?(:manage_public_people_queries)
   end
 
-  def initialize(attributes=nil, *args)
+  def initialize(attributes = nil, *_args)
     super attributes
-    self.filters ||= { 'status' => {:operator => "=", :values => ['1']} }
+    self.filters ||= { 'status' => { :operator => '=', :values => ['1'] } }
   end
 
   def initialize_available_filters
@@ -125,9 +135,7 @@ class PeopleQuery < Query
       name_prefix = (level > 0 ? '-' * 2 * level + ' ' : '') #'&nbsp;'
       departments << [(name_prefix + department.name).html_safe, department.id.to_s]
     end
-    add_available_filter("department_id", :type => :list_optional, :name => l(:label_people_department), :order => 18,
-      :values => departments
-    ) if departments.any?
+    add_available_filter('department_id', :type => :list_optional, :name => l(:label_people_department), :order => 18, :values => departments) if departments.any?
 
     @available_filters ||= {}
   end
@@ -140,33 +148,36 @@ class PeopleQuery < Query
     return @available_columns if @available_columns
     @available_columns = self.class.available_columns.dup
 
-    @available_columns += CustomField.where(:type => 'UserCustomField').all.collect {|cf| QueryCustomFieldColumn.new(cf) }
+    @available_columns += CustomField.where(:type => 'UserCustomField').all.find_all { |cf| User.current.admin? || cf.visible? }.collect { |cf| QueryCustomFieldColumn.new(cf) }
     @available_columns
   end
 
-  def objects_scope(options={})
-    scope = Person.where(:type => 'User').logged
-    scope = scope.visible if Person.respond_to?(:visible)
+  def objects_scope(options = {})
+    scope = Person.respond_to?(:visible) ? Person.visible : Person.logged
 
-    options[:search].split(' ').collect{ |search_string| scope = scope.seach_by_name(search_string) } if options[:search].present?
+    options[:search].split(' ').each { |search_string| scope = scope.seach_by_name(search_string) } if options[:search]
 
-    includes =  (options[:include] || [] ) + [:department]
-    includes << :email_address if Redmine::VERSION.to_s >= '3.0'
-
-    scope = scope.eager_load(:information).includes( includes.uniq)
-
-    unless self.filters['is_system']
-      scope = scope.where("#{PeopleInformation.table_name}.is_system IS NULL OR #{PeopleInformation.table_name}.is_system = ?", ActiveRecord::Base.connection.quoted_false.gsub(/'/, ''))
+    associations = options[:include] || []
+    associations << :information
+    unless options[:count_request]
+      preloads  = [:department]
+      preloads << :email_address if Redmine::VERSION.to_s >= '3.0'
     end
 
-    scope = scope.where(statement).
-      where(options[:conditions])
+    unless filters['is_system']
+      scope = scope.where("#{PeopleInformation.table_name}.is_system IS NULL OR #{PeopleInformation.table_name}.is_system = ?", false)
+    end
 
     scope
+      .eager_load(associations.uniq)
+      .preload(preloads)
+      .where(type: 'User')
+      .where(statement)
+      .where(options[:conditions])
   end
 
   def object_count
-    objects_scope.count
+    objects_scope(count_request: true).count
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
   end
@@ -177,14 +188,14 @@ class PeopleQuery < Query
       begin
         # Rails3 will raise an (unexpected) RecordNotFound if there's only a nil group value
         r = objects_scope.
-          joins(joins_for_order_statement(group_by_statement)).
-          group(group_by_statement).count
+            joins(joins_for_order_statement(group_by_statement)).
+            group(group_by_statement).count
       rescue ActiveRecord::RecordNotFound
-        r = {nil => object_count}
+        r = { nil => object_count }
       end
       c = group_by_column
       if c.is_a?(QueryCustomFieldColumn)
-        r = r.keys.inject({}) {|h, k| h[c.custom_field.cast_value(k)] = r[k]; h}
+        r = r.keys.inject({}) { |h, k| h[c.custom_field.cast_value(k)] = r[k]; h }
       end
     end
     r
@@ -192,22 +203,28 @@ class PeopleQuery < Query
     raise StatementInvalid.new(e.message)
   end
 
-  def results_scope(options={})
+  def results_scope(options = {})
     order_option = [group_by_sort_order, options[:order]].flatten.reject(&:blank?)
 
-    objects_scope(options).
-      order(order_option).
-      joins(joins_for_order_statement(order_option.join(','))).
-      limit(options[:limit]).
-      offset(options[:offset])
+    objects_scope(options)
+      .preload(options[:preload])
+      .joins(joins_for_order_statement(order_option.join(',')))
+      .order(order_option)
+      .limit(options[:limit])
+      .offset(options[:offset])
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
   end
 
   def sql_for_department_id_field(field, operator, value)
     department_ids = value
-    department_ids += Department.where(:id => value).map(&:descendants).flatten.collect{|c| c.id.to_s}.uniq
+    department_ids += Department.where(:id => value).map(&:descendants).flatten.collect { |c| c.id.to_s }.uniq
     sql_for_field(field, operator, department_ids, PeopleInformation.table_name, 'department_id')
   end
 
+  def contact_query_values(values)
+    scope = Person.where(:id => values)
+    scope = scope.visible if Person.respond_to?(:visible)
+    scope.map { |c| [c.name.html_safe, c.id.to_s] }
+  end
 end

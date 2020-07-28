@@ -64,3 +64,7 @@ es:
 
   #0.1.7
   label_people_show_for_registered_users: Mostrar Personas a usuarios registrados
+
+  label_people_hour: h
+  label_people_minute: m
+  label_people_deviation: Desviación

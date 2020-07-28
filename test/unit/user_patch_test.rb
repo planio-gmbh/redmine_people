@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,18 +22,17 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class UserPatchTest < ActiveSupport::TestCase
-
   fixtures :users, :projects, :roles, :members, :member_roles
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   def setup
     Setting.plugin_redmine_people = {}
 
-    @params =  { 'firstname' => 'newName', 'lastname' => 'lastname', 'mail' => 'mail@mail.com', 'language' => 'ru'}
+    @params = { 'firstname' => 'newName', 'lastname' => 'lastname', 'mail' => 'mail@mail.com', 'language' => 'ru' }
     @user = User.find(4)
     User.current = @user
   end
-  
+
   def test_create_by_anonumys_self_registration_off
     Setting.self_registration = '0'
     User.current = nil
@@ -41,9 +40,9 @@ class UserPatchTest < ActiveSupport::TestCase
     user = User.new
     user.safe_attributes = @params
     user.login = 'login'
-    user.password, @user.password_confirmation = 'password','password'
+    user.password, @user.password_confirmation = 'password', 'password'
 
-    assert (not user.save)
+    assert !user.save
   end
 
   def test_create_by_anonumys_self_registration_on
@@ -53,7 +52,7 @@ class UserPatchTest < ActiveSupport::TestCase
     user = User.new
     user.safe_attributes = @params
     user.login = 'login'
-    user.password, @user.password_confirmation = 'password','password'
+    user.password, @user.password_confirmation = 'password', 'password'
 
     assert user.save
   end
@@ -79,11 +78,10 @@ class UserPatchTest < ActiveSupport::TestCase
     subordinate = Person.find(4)
 
     # Without permission
-    assert (not manager.allowed_people_to?(:edit_people, subordinate) )
-    
+    assert !manager.allowed_people_to?(:edit_people, subordinate)
+
     # Adds permission
     PeopleAcl.create(3, ['edit_subordinates'])
     assert manager.allowed_people_to?(:edit_people, subordinate)
   end
-
 end

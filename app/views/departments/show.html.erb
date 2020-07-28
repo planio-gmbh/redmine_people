@@ -3,8 +3,10 @@
 <% html_title "#{l(:label_department)} ##{@department.id}: #{@department.name}" %>
 
 <div class="contextual">
-  <%= link_to l(:button_edit), edit_department_path(@department), :class => 'icon icon-edit' if User.current.allowed_people_to?(:edit_departments) %>
-  <%= link_to l(:button_delete), department_path(@department), :confirm => l(:text_are_you_sure), :method => :delete, :class => 'icon icon-del' if User.current.allowed_people_to?(:delete_departments) %>
+  <% if User.current.allowed_people_to?(:manage_departments) %>
+    <%= link_to l(:button_edit), edit_department_path(@department), :class => 'icon icon-edit' %>
+    <%= link_to l(:button_delete), department_path(@department), :confirm => l(:text_are_you_sure), :method => :delete, :class => 'icon icon-del' %>
+  <% end %>
 </div>
 
 <h2><%= l(:label_department) %> #<%= @department.id %></h2>
@@ -45,5 +47,4 @@
 
 <% content_for :header_tags do %>
   <%= javascript_include_tag :redmine_people, :plugin => 'redmine_people'  %>
-  <%= stylesheet_link_tag :redmine_people, :plugin => 'redmine_people' %>
 <% end %>

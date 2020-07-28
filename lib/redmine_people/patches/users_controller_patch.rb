@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ module RedminePeople
         base.send(:include, InstanceMethods)
 
         base.class_eval do
-          before_filter :authorize_people, :only => :show
+          before_action :authorize_people, :only => :show
         end
       end
 
@@ -32,7 +32,6 @@ module RedminePeople
         def authorize_people
           deny_access unless User.current.allowed_people_to?(:view_people, @user)
         end
-
       end
     end
   end

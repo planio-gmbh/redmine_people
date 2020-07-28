@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class AttachmentsControllerTest < ActionController::TestCase
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:departments, :people_information, :attachments])
+                                          [:departments, :people_information, :attachments])
   def setup
     User.current = nil
     set_fixtures_attachments_directory
@@ -45,13 +45,13 @@ class AttachmentsControllerTest < ActionController::TestCase
     set_tmp_attachments_directory
 
     @f = Attachment.create(:container => Department.find(2),
-                      :file => people_uploaded_file("testfile_1.png", "image/png"),
-                      :filename => "testfile_1.png",
-                      :author => User.find(1))
+                           :file => people_uploaded_file('testfile_1.png', 'image/png'),
+                           :filename => 'testfile_1.png',
+                           :author => User.find(1))
 
     @request.session[:user_id] = 2
 
-    get :download, :id => @f.id
+    compatible_request :get, :download, :id => @f.id
     assert_response :success
     assert_equal 'image/png', @response.content_type
   end
@@ -60,14 +60,13 @@ class AttachmentsControllerTest < ActionController::TestCase
     set_tmp_attachments_directory
 
     @f = Attachment.create(:container => Department.find(2),
-                      :file => people_uploaded_file("testfile_1.png", "image/png"),
-                      :filename => "testfile_1.png",
-                      :author => User.find(1))
+                           :file => people_uploaded_file('testfile_1.png', 'image/png'),
+                           :filename => 'testfile_1.png',
+                           :author => User.find(1))
 
     @request.session[:user_id] = 7
 
-    get :download, :id => @f.id
+    compatible_request :get, :download, :id => @f.id
     assert_response 403
   end
-
 end

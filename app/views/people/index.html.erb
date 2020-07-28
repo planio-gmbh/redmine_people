@@ -52,31 +52,16 @@
 
 <% html_title l(:label_people) %>
 
-<%= context_menu url_for( {:controller => "people", :action => "context_menu"} )%>
-
-<% content_for :sidebar do %>
-
-  <% unless true || @departments.blank? %>
-  <div id="people_departments">
-    <h3><%= l(:label_department_plural) %></h3>
-    <%= department_tree_links(@departments) %>
-  </div>
-  <% end %>
-
-  <div id="next_birthdays">
-    <h3><%= l(:label_people_next_birthdays) %></h3>
-    <%= render :partial => 'person_birthday', :collection => @next_birthdays %>
-  </div>
-
-  <div id="new_people">
-    <h3><%= l(:label_people_new_people) %></h3>
-    <%= render :partial => 'person_data', :collection => @new_people %>
-  </div>
-
+<% if Redmine::VERSION.to_s >= '3.4' || Redmine::VERSION::BRANCH != 'stable' %>
+    <%= context_menu %>
+<% else %>
+    <%= context_menu url_for( {:controller => "people", :action => "context_menu"} ) %>
 <% end %>
 
+<%= render :partial => 'people/sidebar', :locals => {:tags => @tags} %>
+
 <% content_for :header_tags do %>
-    <%= javascript_include_tag :redmine_people, :plugin => 'redmine_people'  %>
-	<%= stylesheet_link_tag :redmine_people, :plugin => 'redmine_people' %>
-	<meta name = "format-detection" content = "telephone=no">
+  <%= select2_assets %>
+  <%= javascript_include_tag :redmine_people, :plugin => 'redmine_people'  %>
+  <meta name = "format-detection" content = "telephone=no">
 <% end %>

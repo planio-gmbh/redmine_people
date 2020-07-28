@@ -1,6 +1,6 @@
 <div id="department_files">
   <div class="contextual">
-    <%= link_to l(:button_add), {}, :onclick => "$('#add_attachment_form').show(); $('#add_attachment_link').hide(); return false;", :class => 'icon icon-add', :id => 'add_attachment_link' if User.current.allowed_people_to?(:edit_departments) %>
+    <%= link_to l(:button_add), {}, :onclick => "$('#add_attachment_form').show(); $('#add_attachment_link').hide(); return false;", :class => 'icon icon-add', :id => 'add_attachment_link' if User.current.allowed_people_to?(:manage_departments) %>
   </div>
      <%= labelled_form_for :department, @department,
                                :url => {:action => 'update', :id => @department},

@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class AccountControllerTest < ActionController::TestCase
+  include RedminePeople::TestCase::TestHelper
+
   fixtures :users, :roles
   fixtures :email_addresses if Redmine::VERSION.to_s > '3.0'
 
@@ -34,14 +36,12 @@ class AccountControllerTest < ActionController::TestCase
 
     with_settings :self_registration => '3' do
       assert_difference 'User.count' do
-        post :register, :user => {
-          :login => 'register',
-          :password => 'secret123',
-          :password_confirmation => 'secret123',
-          :firstname => 'John',
-          :lastname => 'Doe',
-          :mail => 'register@example.com'
-        }
+        compatible_request :post, :register, :user => { :login => 'register',
+                                                        :password => 'secret123',
+                                                        :password_confirmation => 'secret123',
+                                                        :firstname => 'John',
+                                                        :lastname => 'Doe',
+                                                        :mail => 'register@example.com' }
         assert_redirected_to '/my/account'
       end
       user = User.order('id DESC').first

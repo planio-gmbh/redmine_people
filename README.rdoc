@@ -1,3 +1,0 @@
-= redmine_people
-
-Description goes here

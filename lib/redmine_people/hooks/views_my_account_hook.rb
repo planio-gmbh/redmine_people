@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 module RedminePeople
   module Hooks
     class ViewsMyAccountHook < Redmine::Hook::ViewListener
-      render_on :view_my_account, :partial => "my/disabled_fields"
+      render_on :view_my_account, :partial => 'my/disabled_fields'
     end
   end
 end

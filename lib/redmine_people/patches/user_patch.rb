@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ require_dependency 'user'
 
 module RedminePeople
   module Patches
-
     module UserPatch
       def self.included(base) # :nodoc:
         base.send(:include, InstanceMethods)
@@ -31,16 +30,16 @@ module RedminePeople
         base.class_eval do
           unloadable
           if ActiveRecord::VERSION::MAJOR >= 4
-            has_one :avatar, lambda { where("#{Attachment.table_name}.description = 'avatar'")}, :class_name => "Attachment", :as  => :container, :dependent => :destroy
+            has_one :avatar, lambda { where("#{Attachment.table_name}.description = 'avatar'") }, :class_name => 'Attachment', :as => :container, :dependent => :destroy
           else
-            has_one :avatar, :class_name => "Attachment", :as  => :container, :conditions => "#{Attachment.table_name}.description = 'avatar'", :dependent => :destroy
+            has_one :avatar, :class_name => 'Attachment', :as => :container, :conditions => "#{Attachment.table_name}.description = 'avatar'", :dependent => :destroy
           end
           acts_as_attachable_global
 
           def self.clear_safe_attributes
             @safe_attributes.collect! do |attrs, options|
               if attrs.collect!(&:to_s).include?('firstname')
-                [attrs - ['firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields'] , options]
+                [attrs - ['firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields'], options]
               else
                 [attrs, options]
               end
@@ -49,7 +48,7 @@ module RedminePeople
           self.clear_safe_attributes
 
           safe_attributes 'firstname', 'lastname', 'mail', 'custom_field_values', 'custom_fields',
-          :if => lambda {|user, current_user| current_user.allowed_people_to?(:edit_people, user) || (user.new_record? && current_user.anonymous? && Setting.self_registration?) }
+          :if => lambda { |user, current_user| current_user.allowed_people_to?(:edit_people, user) || (user.new_record? && current_user.anonymous? && Setting.self_registration?) }
         end
       end
 
@@ -67,23 +66,23 @@ module RedminePeople
 
           return true if admin?
 
-          if self.respond_to?(:"check_permission_#{permission.to_s}", true)
-            self.send("check_permission_#{permission}".to_sym, person)
+          if respond_to?(:"check_permission_#{permission.to_s}", true)
+            send("check_permission_#{permission}".to_sym, person)
           else
             has_permission?(permission)
           end
         end
 
         def has_permission?(permission)
-          (self.groups + [self]).map{|principal| PeopleAcl.allowed_to?(principal, permission) }.inject{|memo,allowed| memo || allowed }
+          (groups + [self]).map { |principal| PeopleAcl.allowed_to?(principal, permission) }.inject { |memo, allowed| memo || allowed }
         end
 
         protected
 
         def check_permission_view_people(person)
-          if person && person.is_a?(User) && person.id == self.id
+          if person && person.is_a?(User) && person.id == id
             return true
-          elsif self.is_a?(User) && !self.anonymous? && Setting.plugin_redmine_people["visibility"].to_i > 0
+          elsif is_a?(User) && !anonymous? && Setting.plugin_redmine_people['visibility'].to_i > 0
             return true
           end
           has_permission?(:view_people)
@@ -92,13 +91,13 @@ module RedminePeople
         def check_permission_edit_people(person)
           if person && person.is_a?(User)
             # Check to edit himself
-            if person.id == self.id && Setting.plugin_redmine_people['edit_own_data'].to_i > 0
+            if person.id == id && Setting.plugin_redmine_people['edit_own_data'].to_i > 0
               return true
             end
 
             # Check to edit subordinates.
             # Works only for persons.
-            if person.respond_to?(:manager_id) && has_permission?(:edit_subordinates) && self.id == person.manager_id
+            if person.respond_to?(:manager_id) && has_permission?(:edit_subordinates) && id == person.manager_id
               return true
             end
           end
@@ -106,9 +105,11 @@ module RedminePeople
           has_permission?(:edit_people)
         end
 
+        def check_permission_view_performance(person)
+          (person.is_a?(User) && person.id == self.id) || has_permission?(:view_performance)
+        end
       end
     end
-
   end
 end
 

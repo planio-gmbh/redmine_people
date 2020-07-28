@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,30 +20,29 @@
 class PeopleMailsController < ApplicationController
   unloadable
 
-
   def new
-    @people = People.visible.where(:id => params[:ids]).reject{|c| c.email.blank?}
+    @people = People.visible.where(:id => params[:ids]).reject { |c| c.email.blank? }
     raise ActiveRecord::RecordNotFound if @people.empty?
-    if !@people.collect{|c| c.send_mail_allowed?}.inject{|memo,d| memo && d}
+    if !@people.collect(&:send_mail_allowed?).inject { |memo, d| memo && d }
       deny_access
       return
-    end     
+    end
   end
 
   def create
     people = Contact.visible.where(:id => params[:ids])
     raise ActiveRecord::RecordNotFound if people.empty?
-    if !people.collect{|c| c.send_mail_allowed?}.inject{|memo,d| memo && d}
-      deny_access 
+    if !people.collect(&:send_mail_allowed?).inject { |memo, d| memo && d }
+      deny_access
       return
-    end  
+    end
     raise_delivery_errors = ActionMailer::Base.raise_delivery_errors
     # Force ActionMailer to raise delivery errors so we can catch it
     ActionMailer::Base.raise_delivery_errors = true
     delivered_people = []
     error_people = []
     people.each do |contact|
-      begin  
+      begin
         params[:message] = mail_macro(contact, params[:"message-content"])
         ContactsMailer.bulk_mail(contact, params).deliver
         delivered_people << contact
@@ -51,25 +50,25 @@ class PeopleMailsController < ApplicationController
         note = ContactNote.new
         note.subject = params[:subject]
         note.content = params[:message]
-        note.author = User.current   
+        note.author = User.current
         note.type_id = Note.note_types[:email]
-        contact.notes << note   
-        Attachment.attach_files(note, params[:attachments])    
-        render_attachment_warning_if_needed(note) 
-        
+        contact.notes << note
+        Attachment.attach_files(note, params[:attachments])
+        render_attachment_warning_if_needed(note)
+
       rescue Exception => e
         error_people << [contact, e.message]
       end
-      flash[:notice] = l(:notice_email_sent, delivered_people.map{|c| "#{c.name} <span class='icon icon-email'>#{c.emails.first}</span>"}.join(', ')).chomp[0,500] if delivered_people.any?
-      flash[:error] = l(:notice_email_error, error_people.map{|e| "#{e[0].name}: #{e[1]}"}.join(', ')).chomp[0,500] if error_people.any?
+      flash[:notice] = l(:notice_email_sent, delivered_people.map { |c| "#{c.name} <span class='icon icon-email'>#{c.emails.first}</span>" }.join(', ')).chomp[0, 500] if delivered_people.any?
+      flash[:error] = l(:notice_email_error, error_people.map { |e| "#{e[0].name}: #{e[1]}" }.join(', ')).chomp[0, 500] if error_people.any?
     end
-    
+
     ActionMailer::Base.raise_delivery_errors = raise_delivery_errors
-    redirect_back_or_default({:controller => 'people', :action => 'index', :project_id => @project})
-  end  
+    redirect_back_or_default(:controller => 'people', :action => 'index', :project_id => @project)
+  end
 
   def preview_email
     @text = mail_macro(Contact.visible.where(:id  => params[:ids][0]).first, params[:"message-content"])
     render :partial => 'common/preview'
-  end  
+  end
 end

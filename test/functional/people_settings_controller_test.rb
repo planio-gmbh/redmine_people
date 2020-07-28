@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,12 +28,12 @@ class PeopleSettingsControllerTest < ActionController::TestCase
            :users,
            :roles,
            :members,
-           :member_roles
+           :member_roles,
+           :issue_statuses
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
-
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:departments, :people_information])
+                                          [:departments, :people_information])
 
   def setup
     @request.session[:user_id] = 1
@@ -44,39 +44,36 @@ class PeopleSettingsControllerTest < ActionController::TestCase
   end
 
   def test_get_index
-    get :index
+    compatible_request :get, :index
     assert_response :success
-    assert_template :index
   end
 
   def test_put_update
-    post :update, :id => 1, :settings => {:visibility => '1'}, :tab => 'general'
-    assert_equal '1', Setting.plugin_redmine_people["visibility"]
+    compatible_request :post, :update, :id => 1, :settings => { :visibility => '1' }, :tab => 'general'
+    assert_equal '1', Setting.plugin_redmine_people['visibility']
     assert_redirected_to :action => 'index', :tab => 'general'
   end
 
   def test_post_destroy
     PeopleAcl.create(4, ['add_people'])
 
-    post :destroy, :id => 4
+    compatible_request :post, :destroy, :id => 4
     assert_equal false, @user.allowed_people_to?(:add_people, @user)
 
-    get :index
-    assert_select '#principals label', { :count => 1, :text => /#{@user.name}/ }
-    assert_select 'table .user.name a', { :count => 0, :text => /#{@user.name}/ }
+    compatible_request :get, :index
+    assert_select '#principals label', :count => 1, :text => /#{@user.name}/
+    assert_select 'table .user.name a', :count => 0, :text => /#{@user.name}/
   end
 
   def test_post_create
-    user = User.find(4)
     assert_equal false, @user.allowed_people_to?(:add_people, @user)
 
     @request.session[:user_id] = 1
-    post :create, :user_ids => ['4'], :acls => ['add_people']
+    compatible_request :post, :create, :user_ids => ['4'], :acls => ['add_people']
     assert @user.allowed_people_to?(:add_people, @user)
 
-    get :index
-    assert_select '#principals label', { :count => 0, :text => /#{@user.name}/ }
-    assert_select 'table .user.name a', { :count => 1, :text => /#{@user.name}/ }
+    compatible_request :get, :index
+    assert_select '#principals label', :count => 0, :text => /#{@user.name}/
+    assert_select 'table .user.name a', :count => 1, :text => /#{@user.name}/
   end
-
 end

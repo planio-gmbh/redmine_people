@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,14 +22,13 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class DepartmentTest < ActiveSupport::TestCase
-  
   fixtures :users, :projects, :roles, :members, :member_roles,
            :enabled_modules, :issues, :trackers
 
   fixtures :email_addresses if ActiveRecord::VERSION::MAJOR >= 4
 
   RedminePeople::TestCase.create_fixtures(Redmine::Plugin.find(:redmine_people).directory + '/test/fixtures/',
-                            [:people_information, :departments, :attachments])
+                                          [:people_information, :departments, :attachments])
 
   def setup
     #     1   2
@@ -51,7 +50,7 @@ class DepartmentTest < ActiveSupport::TestCase
   end
 
   def test_people
-    assert (not Department.find(1).people.any? )
+    assert !Department.find(1).people.any?
     assert_equal [1, 2, 3], Department.find(2).people.map(&:id).sort
     assert_equal [4], Department.find(3).people.map(&:id)
   end
@@ -67,21 +66,21 @@ class DepartmentTest < ActiveSupport::TestCase
         departments1.push(department.name)
       end
     end
-    assert_equal ['FBI department 1', 'FBI department 2'].sort , departments0.sort
-    assert_equal ['FBI department 1.1', 'fourth'].sort , departments1.sort
+    assert_equal ['FBI department 1', 'FBI department 2'].sort, departments0.sort
+    assert_equal ['FBI department 1.1', 'fourth'].sort, departments1.sort
   end
 
   def test_nested_set_structure
-    assert_equal [1,8], [@first.lft, @first.rgt]
-    assert_equal [9,10],[@second.lft, @second.rgt]
+    assert_equal [1, 8], [@first.lft, @first.rgt]
+    assert_equal [9, 10], [@second.lft, @second.rgt]
     assert_equal [@fourth.lft, @fourth.rgt], [@fifth.lft - 1, @fifth.rgt + 1]
   end
 
   def test_allowed_parents
-    assert_equal ["FBI department 2"], @first.allowed_parents.compact.map(&:name).sort
-    assert_equal ["FBI department 1", "FBI department 1.1", "fifth", "fourth"], @second.allowed_parents.compact.map(&:name).sort
-    assert_equal ["FBI department 1", "FBI department 1.1", "FBI department 2"], @fourth.allowed_parents.compact.map(&:name).sort
-    assert_equal ["FBI department 1", "FBI department 1.1", "FBI department 2", "fourth"], @fifth.allowed_parents.compact.map(&:name).sort
+    assert_equal ['FBI department 2'], @first.allowed_parents.compact.map(&:name).sort
+    assert_equal ['FBI department 1', 'FBI department 1.1', 'fifth', 'fourth'], @second.allowed_parents.compact.map(&:name).sort
+    assert_equal ['FBI department 1', 'FBI department 1.1', 'FBI department 2'], @fourth.allowed_parents.compact.map(&:name).sort
+    assert_equal ['FBI department 1', 'FBI department 1.1', 'FBI department 2', 'fourth'], @fifth.allowed_parents.compact.map(&:name).sort
   end
 
   def test_all_childs
@@ -91,7 +90,7 @@ class DepartmentTest < ActiveSupport::TestCase
   def test_people_of_branch_department
     assert_equal [4], @first.people_of_branch_department.map(&:id).sort
     assert_equal [1, 2, 3], @second.people_of_branch_department.map(&:id).sort
-    
+
     # Changes department for user 2
     PeopleInformation.where(:user_id => 1).first.update_attributes(:department_id => @fifth.id)
     assert_equal [1, 4], @first.people_of_branch_department.map(&:id).sort
@@ -100,5 +99,4 @@ class DepartmentTest < ActiveSupport::TestCase
   def test_attachments
     assert_equal [1], @first.attachments.map(&:id).uniq.sort
   end
-  
 end

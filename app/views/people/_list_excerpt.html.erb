@@ -1,5 +1,5 @@
-<%= form_tag({}) do %>
-<%= hidden_field_tag 'back_url', url_for(params) %>
+<%= form_tag({}, :data => {:cm_url => context_menu_people_path}) do %>
+<%= hidden_field_tag 'back_url', url_for(params.respond_to?(:to_unsafe_hash) ? params.to_unsafe_hash : params) %>
 <div class="autoscroll">
     <table class="people index">
     <tbody>

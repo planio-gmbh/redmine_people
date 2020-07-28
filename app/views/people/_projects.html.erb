@@ -1,6 +1,6 @@
-<% unless @memberships.empty? %>
+<% unless @person.all_visible_memberships.empty? %>
 <ul>
-<% for membership in @memberships %>
+<% @person.all_visible_memberships.each do |membership| %>
   <li><%= link_to_project(membership.project) %>
     (<%=h membership.roles.sort.collect(&:to_s).join(', ') %>, <%= format_date(membership.created_on) %>)</li>
 <% end %>

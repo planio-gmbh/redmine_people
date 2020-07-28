@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,11 +40,36 @@ class RedminePeople::TestCase
       Setting.plugin_redmine_people = settings.merge(options)
       yield
     ensure
-      saved_settings.each {|k, v| Setting.plugin_redmine_people[k] = v} if saved_settings
+      saved_settings.each { |k, v| Setting.plugin_redmine_people[k] = v } if saved_settings
     end
 
     def people_uploaded_file(filename, mime)
       fixture_file_upload("../../plugins/redmine_people/test/fixtures/files/#{filename}", mime, true)
+    end
+
+    def compatible_request(type, action, parameters = {})
+      return send(type, action, :params => parameters) if Rails.version >= '5.1'
+      send(type, action, parameters)
+    end
+
+    def compatible_xhr_request(type, action, parameters = {})
+      return send(type, action, :params => parameters, :xhr => true) if Rails.version >= '5.1'
+      xhr type, action, parameters
+    end
+
+    def people_in_list
+      ids = css_select('table.people #ids_').map { |tag| tag['text'].to_i }
+      Person.where(:id => ids).sort_by { |person| ids.index(person.id) }
+    end
+
+    def dayoffs_in_list
+      ids = css_select('table.dayoffs td.id').map { |tag| tag.children.first.content.to_i }
+      Dayoff.where(id: ids).sort_by { |dayoff| ids.index(dayoff.id) }
+    end
+
+    def announcements_in_list
+      descriptions = css_select('table.list td.name').map { |tag| tag['text'] }
+      PeopleAnnouncement.where(:description => descriptions)
     end
   end
 
@@ -54,6 +79,5 @@ class RedminePeople::TestCase
     else
       ActiveRecord::Fixtures.create_fixtures(fixtures_directory, table_names, class_names = {})
     end
-  end  
-
+  end
 end

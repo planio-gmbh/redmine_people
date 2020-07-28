@@ -22,3 +22,27 @@ custom_values_004:
   customized_id: 4
   id: 4
   value: 190
+custom_values_007:
+  customized_type: Principal
+  custom_field_id: 3
+  customized_id: 4
+  id: 5
+  value: 190
+custom_values_008:
+  customized_type: Principal
+  custom_field_id: 4
+  customized_id: 4
+  id: 6
+  value: 190
+custom_values_009:
+  customized_type: Principal
+  custom_field_id: 5
+  customized_id: 4
+  id: 7
+  value: 190
+custom_values_010:
+  customized_type: Principal
+  custom_field_id: 6
+  customized_id: 4
+  id: 8
+  value: 190

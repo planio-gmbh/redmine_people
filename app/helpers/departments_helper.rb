@@ -1,10 +1,10 @@
 # encoding: utf-8
 #
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
 module DepartmentsHelper
+  include PeopleHelper
+
   def department_tree(departments, &block)
     Department.department_tree(departments, &block)
   end
@@ -55,6 +57,10 @@ module DepartmentsHelper
     s.html_safe
   end
 
+  def department_tree_grouped_options_for_select(departments, options = {})
+    content_tag('optgroup', department_tree_options_for_select(departments, options), :label => l('label_department_plural'))
+  end
+
   def department_tree_links(departments, options = {})
     s = ''
     s << "<ul class='department-tree'>"
@@ -66,6 +72,63 @@ module DepartmentsHelper
     end
     s << "</ul>"
     s.html_safe
+  end
+
+  def org_chart_tree
+    content_tag :ul, id: 'org-chart-tree' do
+      content_tag :li do
+        org_chart_tree_root.html_safe + departments_tree
+      end
+    end
+  end
+
+  def org_chart_tree_root
+    if RedminePeople.organization_name.blank?
+      link_to(l(:label_people_set_organization_name), people_settings_path)
+    else
+      RedminePeople.organization_name
+    end
+  end
+
+  def departments_tree
+    return '' if departments_by_parent_id[nil].blank?
+
+    content_tag(:ul) do
+      departments_by_parent_id[nil].inject(''.html_safe) do |s, department|
+        s + department_tree_li(department)
+      end
+    end
+  end
+
+  def department_tree_li(department)
+    s = ''
+    (departments_by_parent_id[department.id] || []).each do |d|
+      s << department_tree_li(d)
+    end
+
+    (department.people.to_a - [department.head]).each do |person|
+      s << content_tag(:li) do
+        render_tree_node person
+      end
+    end
+
+    content_tag(:li) do
+      render_tree_node(department) + content_tag(:ul, s.html_safe)
+    end
+  end
+
+  def render_tree_node(object)
+    if object.is_a? Person
+      render partial: 'departments/org_chart_tree_person_node', locals: { person: object }
+    elsif object.is_a? Department
+      render partial: 'departments/org_chart_tree_department_node', locals: { department: object }
+    end
+  end
+
+  def departments_by_parent_id
+    @departments_by_parent_id ||= Department.includes(:head, :people)
+                                    .all_visible_departments
+                                    .group_by(&:parent_id)
   end
 
   def people_department_link(department, options={})

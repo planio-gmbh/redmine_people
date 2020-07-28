@@ -1,8 +1,66 @@
 == Redmine People plugin changelog
 
 Redmine People plugin - User management plugin for redmine
-Copyright (C) 2011-2015 Kirill Bezrukov
-http://www.redminecrm.com/
+Copyright (C) 2011-2020 RedmineUP
+http://www.redmineup.com/
+
+== 2020-02-18 v1.5.1
+
+* Costs and rates moved to Budgets plugin
+* Added Italian locale (Marco Congia) 
+* Changed Chinese locale (Zelphar Yang) 
+
+== 2020-02-18 v1.5.0
+
+* Organization chart 
+* Leave management
+* Redmine 4.1 support
+* Fixed issue csv export bug
+* Fixed delete redirect bug
+
+
+== 2019-05-22 v1.4.1
+
+* User activity report
+* Costs filter and columns for time entries list
+* Fixed tags filter
+
+== 2018-09-12 v1.4.0
+
+* Redmine 4 support
+* Person Cost and Bill rates 
+* Workday length
+* Person performance based on workday length
+* Fixed age for birthdays date 
+* Fixed deleted issue error
+
+== 2017-09-22 v1.3.2
+
+* Bulk edit
+* Added email filter
+* Visibility rules for people custom fields
+
+== 2017-06-01 v1.3.1
+
+* Holidays email announcement
+* Next holidays on sidebar
+* Select2 control for filters and manager selection 
+* Redmine 3.4 support
+* Chinese translation update 
+* Birthdays announcement critical bug fixed
+
+== 2017-03-20 v1.3.0
+
+* Work experience tab
+* Calendar
+* Holidays list
+* Add manage_departments permission
+* Default group setting 
+* Searching popup with autocomplete for manager field
+* Birthday notifications compatibility fixes
+* Phone icon fixed
+* Notifications renamed to Announcements
+* Chinese translation (Zuofeng Zhang)
 
 == 2016-03-09 v1.2.0
 

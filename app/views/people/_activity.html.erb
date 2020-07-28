@@ -1,9 +1,9 @@
-<% unless @events_by_day.empty? %>
+<% unless @person.all_visible_events.empty? %>
   <div id="activity">
-    <% @events_by_day.keys.sort.reverse.each do |day| %>
+    <% @person.all_visible_events.keys.sort.reverse.each do |day| %>
     <h4><%= format_activity_day(day) %></h4>
     <dl>
-    <% @events_by_day[day].sort {|x,y| y.event_datetime <=> x.event_datetime }.each do |e| -%>
+    <% @person.all_visible_events[day].sort {|x,y| y.event_datetime <=> x.event_datetime }.each do |e| -%>
       <dt class="<%= e.event_type %>">
       <span class="time"><%= format_time(e.event_datetime, false) %></span>
       <%= content_tag('span', h(e.project), :class => 'project') %>
@@ -16,5 +16,5 @@
   </div>
   <%= link_to l(:label_activity) + " \xc2\xbb", :controller => 'activities',
                 :action => 'index', :id => nil, :user_id => @person,
-                :from => @events_by_day.keys.first %>
+                :from => @person.all_visible_events.keys.first %>
 <% end -%>

@@ -15,7 +15,6 @@
     <button class="tab-right" onclick="moveTabRight(this);"></button>
   </div>
 </div>
-
 <% tabs.each do |tab| %>
     <% selected = tab[:name] == selected_tab %>
     <div class="tab-placeholder tab-content <%= 'active loaded' if selected %>" id="tab-placeholder-<%= tab[:name] %>" style="<%= "display: block" if selected %>">

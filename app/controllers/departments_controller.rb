@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,9 @@
 class DepartmentsController < ApplicationController
   unloadable
 
-  before_filter :find_department, :except => [:index, :create, :new]
-  before_filter :require_admin, :only => [:destroy, :new, :create]
-  before_filter :authorize_people, :only => [:update, :edit, :add_people, :remove_person]
-  before_filter :load_department_events, :load_department_attachments, :only => [:show, :load_tab]
+  before_action :find_department, :except => [:index, :create, :new, :org_chart]
+  before_action :authorize_people, :except => [:index, :show, :load_tab, :autocomplete_for_person]
+  before_action :load_department_events, :load_department_attachments, :only => [:show, :load_tab]
 
   helper :attachments
 
@@ -45,51 +44,58 @@ class DepartmentsController < ApplicationController
     @department.safe_attributes = params[:department]
 
     if @department.save
-      attachments = Attachment.attach_files(@department, params[:attachments])
+      @department.head.department = @department if @department.head
+
+      attachments = Attachment.attach_files(@department, params.respond_to?(:to_unsafe_hash) ? params.to_unsafe_hash['attachments'] : params['attachments'])
       render_attachment_warning_if_needed(@department)
 
-      respond_to do |format| 
-        format.html { redirect_to :action => "show", :id => @department } 
+      respond_to do |format|
+        format.html { redirect_to :action => 'show', :id => @department }
         format.api  { head :ok }
       end
     else
       respond_to do |format|
         format.html { render :action => 'edit' }
         format.api  { render_validation_errors(@department) }
-      end      
-    end    
-  end  
+      end
+    end
+  end
 
-  def destroy  
+  def destroy
     if @department.destroy
       flash[:notice] = l(:notice_successful_delete)
-      respond_to do |format|
-        format.html { redirect_to :controller => "people_settings", :action => "index", :tab => "departments" } 
-        format.api { render_api_ok }
-      end      
+      if params[:from] == 'people_settings'
+        respond_to do |format|
+          format.html { redirect_to :controller => 'people_settings', :action => 'index', :tab => 'departments' }
+          format.api { render_api_ok }
+        end
+      else
+        redirect_to :action => 'index'
+      end
     else
       flash[:error] = l(:notice_unsuccessful_save)
     end
-
-  end  
+  end
 
   def create
     @department = Department.new
     @department.safe_attributes = params[:department]
 
-    if @department.save 
-      respond_to do |format| 
-        format.html { redirect_to :action => "show", :id => @department } 
-        # format.html { redirect_to :controller => "people_settings", :action => "index", :tab => "departments" } 
+    if @department.save
+      @department.head.department = @department if @department.head
+
+      respond_to do |format|
+        format.html { redirect_to :action => 'show', :id => @department }
+        # format.html { redirect_to :controller => "people_settings", :action => "index", :tab => "departments" }
         format.api  { head :ok }
       end
     else
       respond_to do |format|
         format.html { render :action => 'new' }
         format.api  { render_validation_errors(@department) }
-      end      
+      end
     end
-  end  
+  end
 
   def add_people
     @people = PeopleInformation.where(:user_id => params[:person_id] || params[:person_ids])
@@ -110,17 +116,19 @@ class DepartmentsController < ApplicationController
     end
   end
 
-
   def autocomplete_for_person
     @people = Person.active.where(:type => 'User').not_in_department(@department).like(params[:q]).limit(100)
     render :layout => false
-  end  
-
-  def load_tab
-
   end
 
-private
+  def load_tab
+  end
+
+  def org_chart
+  end
+
+  private
+
   def find_department
     @department = Department.find(params[:id])
   rescue ActiveRecord::RecordNotFound
@@ -128,25 +136,8 @@ private
   end
 
   def authorize_people
-    allowed = case params[:action].to_s
-      when "create", "new"
-        User.current.allowed_people_to?(:add_departments, @person)
-      when "update", "edit", "add_people", "remove_person"
-        User.current.allowed_people_to?(:edit_departments, @person)
-      when "delete"
-        User.current.allowed_people_to?(:delete_departments, @person)
-      when "index", "show"
-        User.current.allowed_people_to?(:view_departments, @person)
-      else
-        false
-      end    
-
-    if allowed
-      true
-    else  
-      deny_access  
-    end
-  end  
+    User.current.allowed_people_to?(:manage_departments, @person) || deny_access
+  end
 
   def load_department_attachments
     @department_attachments = @department.attachments
@@ -156,5 +147,4 @@ private
     events = Redmine::Activity::CrmFetcher.new(User.current, :author => @department.people_of_branch_department).events(nil, nil, :limit => 10)
     @events_by_day = events.group_by(&:event_date)
   end
-
 end

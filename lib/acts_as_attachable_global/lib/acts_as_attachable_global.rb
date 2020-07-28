@@ -1,8 +1,8 @@
-# This file is a part of Redmine CRM (redmine_contacts) plugin,
-# customer relationship management plugin for Redmine
+# This file is a part of Redmine People (redmine_people) plugin,
+# humanr resources management plugin for Redmine
 #
-# Copyright (C) 2011-2016 Kirill Bezrukov
-# http://www.redminecrm.com/
+# Copyright (C) 2011-2020 RedmineUP
+# http://www.redmineup.com/
 #
 # redmine_people is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ module Redmine
         def acts_as_attachable_global(options = {})
           if ActiveRecord::VERSION::MAJOR >= 4
             has_many :attachments, lambda { order("#{Attachment.table_name}.created_on") }, options.merge(:as => :container,
-                                                 :dependent => :destroy)            
+                                                 :dependent => :destroy)
           else
             has_many :attachments, options.merge(:as => :container,
                                                  :order => "#{Attachment.table_name}.created_on",
@@ -45,12 +45,12 @@ module Redmine
         def self.included(base)
           base.extend ClassMethods
         end
-        
+
         def attachments_visible?(user=User.current)
-          (respond_to?(:visible?) ? visible?(user) : true) 
+          (respond_to?(:visible?) ? visible?(user) : true)
           # && user.allowed_to?(self.class.attachable_options[:view_permission], self.project)
         end
-        
+
         def attachments_deletable?(user=User.current)
           (respond_to?(:visible?) ? visible?(user) : true)  && user.allowed_people_to?(:edit_people, self)
         end
@@ -64,6 +64,9 @@ module Redmine
         end
 
         def save_attachments(attachments, author=User.current)
+          if attachments.respond_to?(:to_unsafe_hash)
+            attachments = attachments.to_unsafe_hash
+          end
           if attachments.is_a?(Hash)
             attachments = attachments.values
           end

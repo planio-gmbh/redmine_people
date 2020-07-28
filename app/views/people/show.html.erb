@@ -37,19 +37,13 @@
 
   <%= call_hook(:view_people_show_details_bottom, :person => @person) %>
 </div>
-<% tabs = [{:name => 'activity', :partial => 'activity', :label => l(:label_activity)},
-     {:name => 'files', :partial => 'attachments', :label => l(:label_attachment_plural)},
-     {:name => 'projects', :partial => 'projects', :label => l(:label_project_plural)},
-     ]
-  tabs << {:name => 'subordinates', :partial => 'subordinates', :label => l(:label_people_subordinates)} if @person.subordinates.any?
-%>
-<%= render_people_tabs tabs%>
 
+<%= render_people_tabs people_tabs(@person) %>
 
 <% content_for :sidebar do %>
   <%= render :partial => 'attributes' %>
   <%= call_hook(:view_people_sidebar_after_attributes, :person => @person) %>
-  <% if !@person.background.blank? %>
+  <% if @person.background.present? %>
     <h3><%= l(:label_people_background) %></h3>
     <div class="wiki"><%= textilizable(@person, :background) %></div>
   <% end %>
@@ -58,6 +52,6 @@
 
 
 <% content_for :header_tags do %>
-  <%= javascript_include_tag :redmine_people, :plugin => 'redmine_people'  %>
-  <%= stylesheet_link_tag :redmine_people, :plugin => 'redmine_people' %>
+  <%= javascript_include_tag :redmine_people, plugin: 'redmine_people'  %>
+  <%= javascript_include_tag 'jquery.glanceyear.js', plugin: 'redmine_people' %>
 <% end %>

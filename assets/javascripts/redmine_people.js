@@ -92,20 +92,39 @@ function showPeopleTab(name, url) {
   return false;
 }
 
-//show modal div for notifications
-function showNotification(url){
+//show modal div for announcements
+function showAnnouncement(url){
   $.ajax({
       url: url,
       type: 'post',
       data:{
-        people_notification:{ 
-          description: $("#notification_description").val(),
-          kind: $("#notification_kind").val()
+        people_announcement:{
+          description: $("#announcement_description").val(),
+          kind: $("#people_announcement_kind").val()
         }
       },
       success: function(data, status, xhr) {
-        $("#notification-show").html(data);
-        showModal('notification-show', '830px');
+        $("#announcement-show").html(data);
+        showModal('announcement-show', '50%');
       }
     });
 }
+
+function updateTab(name, url, data) {
+  $.ajax({
+    url: url,
+    dataType: 'script',
+    data: data,
+    success: function () {
+      if ("replaceState" in window.history) {
+        window.history.replaceState(null, document.title, $('#tab-' + name).attr('href'));
+      }
+    }
+  });
+};
+
+function addEditableBarsOnClickListener() {
+  $('.tooltip.editable').on('click', function () {
+    $.ajax(this.getAttribute('edit_url'))
+  });
+};
