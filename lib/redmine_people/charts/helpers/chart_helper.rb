@@ -32,7 +32,7 @@ module RedminePeople
            { name: l(:label_people_leave_type), value: h(dayoff.leave_type.name) },
            { name: l(:field_status),            value: dayoff.is_approved? ? l(:field_approved) : l(:label_people_not_approved)},
            { name: l(:field_start_date),        value: format_date(dayoff.start_date) },
-           { name: l(:field_end_date),          value: format_date(dayoff.get_end_date) },
+           { name: l(:field_end_date),          value: format_date(dayoff.due_date) },
            { name: l(:field_notes),             value: h(dayoff.notes) }]
         end
 

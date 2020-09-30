@@ -44,9 +44,6 @@ zh:
   people_permission_add_attachments: 增加附件
   people_permission_edit_announcement: 编辑通知
   people_permission_view_performance: 查看效能
-  people_permission_view_rates: 查看Rates
-  people_permission_edit_rates: 编辑Rates
-  people_permission_view_own_rates: 查看自己的Rates
   people_permission_view_leave: 查看休假
   people_permission_edit_leave: 编辑休假
 
@@ -61,9 +58,9 @@ zh:
   #0.0.3:
   label_department_plural: 部门
   label_department_new: 新部门
-  label_department: 系
+  label_department: 部门
   label_department_head: 领导
-  label_people_department: 系
+  label_people_department: 部门
   label_people_at_department: 在
   field_department_parent: 的子部门
   people_permission_edit_departments: 编辑部门
@@ -152,28 +149,6 @@ zh:
   label_people_deviation: 偏差
   label_time_spent: 耗时
   label_people_period: 上一期间
-  label_people_rates: Rates
-  label_people_cost_rate: 成本Rate
-  label_people_bill_rate: 账单Rate
-  label_people_cost_rates: 成本Rate
-  label_people_bill_rates: 账单Rate
-  label_people_current_cost_rate: 当前成本Rate
-  label_people_current_bill_rate: 当前账单Rate
-  label_people_default_cost_rate: 默认成本Rate
-  label_people_default_bill_rate: 默认账单Rate
-  label_people_rates_history: Rate历史记录
-  label_people_rate_new: 新建人员Rate
-  label_people_rate_edit: 编辑人员Rate
-  label_people_weekly_cost: 周成本
-  label_people_monthly_cost: 月成本
-  label_people_rate_currency: Rate货币
-
-  field_rate: Rate
-  field_rate_type: Rate类型
-  field_from_date: 开始日期
-  field_costs: 成本
-  notice_people_rate_successfully_destroyed: 人员Rate被成功销毁
-
   label_people_calendar: 工作日历
   label_people_holidays: 假期
   label_people_organization_chart: 公司架构
@@ -188,7 +163,7 @@ zh:
   label_people_holiday_description: 描述
   label_people_holiday_is_workday: 是工作日
   label_people_holiday_notify: 提醒
-  label_people_holiday_notify_subject:  "添加从日期 %{from} 到 %{to} 为 %{name} 假日。 "
+  label_people_holiday_notify_subject:  "添加从日期 %{from} 到 %{to} 为 %{name} 假日. "
   label_people_holidays_next: 下一个假日
 
   label_people_holiday_new: 新建假日
@@ -200,7 +175,7 @@ zh:
   people_permission_edit_own_work_experience: 编辑自己的工作经历
   people_permission_manage_calendar: 管理工作日历
 
-  notice_failed_to_save_people:  "Failed to save %{count} person(people) on %{total} selected"
+  notice_failed_to_save_people:  "无法将 %{count} 人员保存在所选的 %{total} 上"
   people_label_bulk_edit_selected_people: 编辑所有选择的人员
 
   label_people_add_tags: 添加标签
@@ -231,7 +206,7 @@ zh:
   label_people_leave_comment: 留言
   label_people_graph: 图表
   label_people_not_approved: 未批准
-  label_people_scheduled_for: for
+  label_people_scheduled_for: 给
   label_people_added_day_off: 添加调休
 
   notice_leave_type_successfully_destroyed: 休假类型已被成功销毁
@@ -241,8 +216,12 @@ zh:
   field_approved: 已批准
   field_color: 颜色
   field_leave_type: 休假类型
-  field_hours_per_day: Hours/Day
+  field_hours_per_day: 小时/日
   field_duration: 持续
-  field_hours_per_day_abbreviation: h/d
+  field_hours_per_day_abbreviation: 小时/天
 
   label_people_contact_plural: 联系人
+  activerecord:
+    errors:
+      messages:
+        greater_than_or_equal_to_start_date: 必须大于或等于开始日期

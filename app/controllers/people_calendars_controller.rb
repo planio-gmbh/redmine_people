@@ -45,8 +45,9 @@ class PeopleCalendarsController < ApplicationController
     @query.group_by = nil
     if @query.valid?
       events = []
-      events += @query.holidays(:conditions => ['((start_date BETWEEN ? AND ?) OR (end_date BETWEEN ? AND ?))', @calendar.startdt, @calendar.enddt, @calendar.startdt, @calendar.enddt])
-      events += @query.birthdays(:month => @calendar.month) if show_birthdays?
+      events += @query.holidays(conditions: ['((start_date BETWEEN :from AND :to) OR (end_date BETWEEN :from AND :to))', from: @calendar.startdt, to: @calendar.enddt])
+      events += @query.birthdays(month: @calendar.month) if show_birthdays?
+      events += @query.dayoffs(conditions: ['((start_date BETWEEN :from AND :to) OR (end_date BETWEEN :from AND :to))', from: @calendar.startdt, to: @calendar.enddt])
 
       @calendar.custom_events = events
     end

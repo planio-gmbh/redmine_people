@@ -45,6 +45,9 @@ module RedminePeople
                                                       to_a.sort! { |x, y| x.name <=> y.name }.
                                                       collect { |m| [m.name.html_safe, m.id.to_s] }
           end
+          if available_filters[field] && available_filters[field][:type] == :people_tags
+            available_filters[field][:values] = people_tags_values(values) if respond_to?(:people_tags_values)
+          end
           true
         end
       end

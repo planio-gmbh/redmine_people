@@ -30,7 +30,7 @@ module RedminePeople
         end
 
         def render
-          coords = coordinates(@dayoff.start_date, @dayoff.get_end_date)
+          coords = coordinates(@dayoff.start_date, @dayoff.due_date)
           if coords[:bar_start] && coords[:bar_end]
             render_bar(coords) + render_tooltip(coords)
           end

@@ -53,6 +53,12 @@ class PeopleHolidayQuery < Query
     raise StatementInvalid.new(e.message)
   end
 
+  def dayoffs(options)
+    Dayoff.where(options[:conditions]).to_a
+  rescue ::ActiveRecord::StatementInvalid => e
+    raise StatementInvalid.new(e.message)
+  end
+
   private
 
   def birthday_condition(month)

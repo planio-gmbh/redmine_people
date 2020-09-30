@@ -1,19 +1,19 @@
 # encoding: utf-8
 # English strings go here for Rails i18n
 pt-BR:
-  label_people: Contato
-  label_people_edit_person: Editando informações do contato
-  label_people_new_person: Novo contato
+  label_people: Pessoas
+  label_people_edit_person: Editando informações do pessoa
+  label_people_new_person: Novo pessoa
   label_people_group_plular: Grupos
   label_people_search: Buscar por nome
   label_people_show_on_map: Mostrar no mapa
-  label_people_person: Contato
-  label_people_all: Mostrar todos contatos
+  label_people_person: Pessoa
+  label_people_all: Mostrar todos pessoas
   label_people_next_birthdays: Próximos aniversários
-  label_people_new_people: Novo contato
+  label_people_new_people: Novo pessoa
   label_people_male: Masculino
   label_people_female: Feminino
-  label_people_settings: Configurações de contato
+  label_people_settings: Configurações de pessoa
 
   button_people_edit_profile: Editar perfil
 
@@ -33,16 +33,16 @@ pt-BR:
   label_people_appearance_date: Data de registro
   label_people_age: Idade
 
-  people_permission_edit_people: Editar contato
-  people_permission_view_people: Visualizar contato
-  people_permission_add_people: Adicionar contato
-  people_permission_delete_people: Deletar contato
+  people_permission_edit_people: Editar pessoa
+  people_permission_view_people: Visualizar pessoa
+  people_permission_add_people: Adicionar pessoa
+  people_permission_delete_people: Deletar pessoa
   people_permission_add_attachments: Adicionar anexos
 
   #0.0.2
   label_people_acl_settings: Configuração de ACL
-  label_people_visibility: Visibilidade de contatos
-  label_people_visibility_select: Mostrar contato
+  label_people_visibility: Visibilidade de pessoas
+  label_people_visibility_select: Mostrar pessoa
   label_people_visibility_resistered: Para usuários registrados
   label_people_visibility_selected: Para usuários selecionados
   label_people_visibility_anonymous: Para usuários anônimos

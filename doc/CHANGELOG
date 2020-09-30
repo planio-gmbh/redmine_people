@@ -4,6 +4,19 @@ Redmine People plugin - User management plugin for redmine
 Copyright (C) 2011-2020 RedmineUP
 http://www.redmineup.com/
 
+== 2020-02-18 v1.5.2
+
+* Added select2 for tags
+* Dayoffs added to Calendar page
+* Portugal locale updated
+* Chinese locale updated
+* Taiwanese locale updated
+* Removed tags migrations
+* Fixed group-by error
+* Fixed last month bug for perfomance chart
+* Fixed initial install error
+* Updated vcard gem versions
+
 == 2020-02-18 v1.5.1
 
 * Costs and rates moved to Budgets plugin

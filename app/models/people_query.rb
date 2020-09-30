@@ -208,6 +208,7 @@ class PeopleQuery < Query
 
     objects_scope(options)
       .preload(options[:preload])
+      .includes(:department)
       .joins(joins_for_order_statement(order_option.join(',')))
       .order(order_option)
       .limit(options[:limit])
@@ -226,5 +227,10 @@ class PeopleQuery < Query
     scope = Person.where(:id => values)
     scope = scope.visible if Person.respond_to?(:visible)
     scope.map { |c| [c.name.html_safe, c.id.to_s] }
+  end
+
+  def people_tags_values(values)
+    scope = Person.available_tags.where(name: values)
+    scope.map { |c| [c.name, c.name] }
   end
 end

@@ -23,6 +23,5 @@ class ActsAsTaggableMigration < Rails.version < '5.1' ? ActiveRecord::Migration 
   end
 
   def self.down
-    ActiveRecord::Base.drop_taggable_table
   end
 end

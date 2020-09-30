@@ -17,15 +17,15 @@
 # You should have received a copy of the GNU General Public License
 # along with redmine_people.  If not, see <http://www.gnu.org/licenses/>.
 
-requires_redmine_crm :version_or_higher => '0.0.52' rescue raise "\n\033[31mRedmine requires newer redmine_crm gem version.\nPlease update with 'bundle update redmine_crm'.\033[0m"
+requires_redmine_crm :version_or_higher => '0.0.54' rescue raise "\n\033[31mRedmine requires newer redmine_crm gem version.\nPlease update with 'bundle update redmine_crm'.\033[0m"
 
 require 'redmine_people'
 
-PEOPLE_VERSION_NUMBER = '1.5.1'
+PEOPLE_VERSION_NUMBER = '1.5.2'
 PEOPLE_VERSION_TYPE = "Light version"
 
-QUOTED_TRUE = ActiveRecord::Base.connection.quoted_true.gsub(/'/, '')
-QUOTED_FALSE = ActiveRecord::Base.connection.quoted_false.gsub(/'/, '')
+QUOTED_TRUE = (ActiveRecord::Base.connection rescue false) && ActiveRecord::Base.connection.quoted_true.gsub(/'/, '')
+QUOTED_FALSE = (ActiveRecord::Base.connection rescue false) && ActiveRecord::Base.connection.quoted_false.gsub(/'/, '')
 
 Redmine::Plugin.register :redmine_people do
   name "Redmine People plugin (#{PEOPLE_VERSION_TYPE})"

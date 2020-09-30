@@ -51,7 +51,6 @@ module RedminePeople
       :manage_tags, :manage_public_people_queries, :edit_subordinates, :edit_announcement,
       :edit_work_experience, :edit_own_work_experience, :manage_calendar
     ]
-    permissions += [:view_rates, :edit_rates, :view_own_rates] if budgets_plugin_installed?
     permissions
   end
 
@@ -88,9 +87,5 @@ module RedminePeople
 
   def self.module_exists?(name)
     const_defined?(name) && const_get(name).instance_of?(Module)
-  end
-
-  def self.budgets_plugin_installed?
-    @@budgets_plugin_installed ||= Redmine::Plugin.installed?(:redmine_budgets)
   end
 end

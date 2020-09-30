@@ -14,5 +14,5 @@
         <%= link_to l(:button_cancel), {}, :onclick => "$('#add_attachment_form').hide(); $('#add_attachment_link').show(); return false;"  %>  
       </fieldset>
   <% end -%>
-  <%= render :partial => 'attachments/links', :locals => {:attachments => @department_attachments, :options  => {:author => true, :deletable => :true}, :thumbnails => Setting.thumbnails_enabled?} %>
+  <%= render :partial => 'attachments/links', :locals => {:container => @department, :attachments => @department_attachments, :options  => {:author => true, :deletable => :true}, :thumbnails => Setting.thumbnails_enabled?} %>
 </div>
