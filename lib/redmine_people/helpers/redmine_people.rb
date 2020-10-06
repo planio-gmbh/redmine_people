@@ -33,6 +33,14 @@ module RedminePeople
         link_to department.name, department_path(department.id, options)
       end.join(' &#187; ').html_safe
     end
+
+    def select2_assets
+      return if @select2_tag_included
+      @select2_tag_included = true
+      javascript_include_tag('/plugin_assets/redmine_crm/javascripts/select2') +
+        stylesheet_link_tag('select2', plugin: "redmine_crm") +
+        javascript_include_tag('/plugin_assets/redmine_crm/javascripts/select2_helpers')
+    end
   end
 end
 
