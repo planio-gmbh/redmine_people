@@ -1,5 +1,9 @@
 # English strings go here for Rails i18n
 en:
+  admin_sections:
+    redmine_crm_money:
+      description: Money settings used for the People plugin
+
   label_people: People
   label_people_edit_person: Editing person information
   label_people_new_person: New person
